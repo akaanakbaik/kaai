@@ -50,7 +50,6 @@ const Ytdl = () => {
 
     const handleProcess = async () => {
         if (!url) return toast.error('URL wajib diisi!');
-        if (!type) return toast.error('Pilih format dulu!');
         
         const regex = /^(https?:\/\/)?((www\.|m\.)?youtube\.com|youtu\.be)\/.+$/;
         if (!regex.test(url) && !url.includes('youtube')) return toast.error('Link YouTube tidak valid!');
@@ -59,23 +58,33 @@ const Ytdl = () => {
         setData(null);
 
         try {
-            const endpoint = type.value === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
+            const endpoint = type?.value === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
             
-            // --- PERBAIKAN DI SINI (UBAH POST JADI GET) ---
-            // Menggunakan params untuk mengirim URL agar aman dari error 405
             const res = await axios.get(endpoint, { 
-                params: { url: url } 
+                params: { url: url },
+                timeout: 300000 
             });
             
             if (res.data.status) {
-                setData({ ...res.data, type: type.value });
+                setData({ ...res.data, type: type?.value || 'video' });
                 toast.success('Video ditemukan!');
             } else {
-                throw new Error(res.data.msg);
+                throw new Error(res.data.msg || "Gagal mengambil data dari server");
             }
         } catch (err) {
-            console.error(err);
-            toast.error('Gagal: ' + (err.response?.data?.msg || err.message));
+            let errorMessage = "Terjadi kesalahan sistem.";
+            
+            if (err.response?.data?.msg) {
+                errorMessage = err.response.data.msg;
+            } else if (typeof err.response?.data === 'string' && err.response.data.includes('html')) {
+                errorMessage = `Server Error (${err.response.status}). Cek Log Backend.`;
+            } else if (err.code === 'ECONNABORTED') {
+                errorMessage = "Waktu habis (Timeout). Server terlalu lama merespon.";
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            toast.error(`Gagal: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -114,7 +123,7 @@ const Ytdl = () => {
                             <Select 
                                 options={options} 
                                 styles={selectStyle} 
-                                placeholder="Pilih Format..."
+                                placeholder="Pilih Format (Opsional)..."
                                 onChange={setType}
                                 value={type}
                                 isSearchable={false}
