@@ -11,7 +11,12 @@ function App() {
     <Router>
       <Toaster 
         position="top-center" 
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{}}
         toastOptions={{
+            duration: 3000,
             style: {
                 border: '2px solid black',
                 padding: '12px',
@@ -19,6 +24,7 @@ function App() {
                 boxShadow: '4px 4px 0px 0px black',
                 fontWeight: 'bold',
                 borderRadius: '8px',
+                background: '#fff'
             },
             success: {
                 style: { background: '#A3E635' },
