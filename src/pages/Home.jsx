@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { NeoCard, NeoButton, NeoInput, NeoTextArea, PageWrapper } from '../components/NeoUI';
-import { Youtube, MessageSquare, Camera, Mail, BookOpen, Terminal, Heart, ArrowUpRight, Zap, Shield } from 'lucide-react';
+import { Youtube, MessageSquare, Camera, Mail, BookOpen, Terminal, Heart, ArrowUpRight, Zap, Shield, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -10,126 +10,128 @@ import { motion } from 'framer-motion';
 const Home = () => {
     const [contact, setContact] = useState({ name: '', title: '', message: '' });
     const [loading, setLoading] = useState(false);
+    const [clickCount, setClickCount] = useState(0);
 
     const sendContact = async () => {
-        if (!contact.name || !contact.message) return toast.error("Isi nama & pesan dulu!");
+        if (!contact.name || !contact.message) return toast.error("Isi data dulu!");
         setLoading(true);
         try {
             await axios.post('/api/contact', contact);
-            toast.success("Laporan terkirim!");
+            toast.success("Terkirim!");
             setContact({ name: '', title: '', message: '' });
-        } catch { toast.error("Gagal mengirim."); } finally { setLoading(false); }
+        } catch { toast.error("Gagal."); } finally { setLoading(false); }
     };
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    // EASTER EGG FUNCTION
+    const handleEasterEgg = () => {
+        setClickCount(prev => prev + 1);
+        if (clickCount + 1 === 5) {
+            toast('🎉 MODE DEVELOPER AKTIF!', { icon: '🧑‍💻', style: { background: '#000', color: '#fff' } });
+        } else if (clickCount + 1 === 10) {
+            toast('🇵🇸 FREE PALESTINE!', { icon: '❤️', duration: 4000 });
+            setClickCount(0);
+        }
     };
 
-    const item = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
-    };
+    const container = { show: { transition: { staggerChildren: 0.1 } } };
+    const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
     return (
         <PageWrapper>
-            <Helmet><title>KAAI - Modern Utilities</title></Helmet>
+            <Helmet><title>KAAI - Utilities</title></Helmet>
 
-            {/* HEADER / HERO */}
-            <div className="flex flex-col items-center justify-center pt-12 pb-16 text-center space-y-6">
+            {/* HERO SECTION COMPACT */}
+            <div className="flex flex-col items-center justify-center pt-6 pb-10 text-center space-y-4">
                 <motion.div 
-                    initial={{ scale: 0 }} animate={{ scale: 1 }} 
+                    whileTap={{ rotate: 360, scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
+                    onClick={handleEasterEgg}
                     className="relative group cursor-pointer"
                 >
-                    <div className="absolute inset-0 bg-black rounded-full translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all"></div>
+                    <div className="absolute inset-0 bg-black rounded-full translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all"></div>
                     <img 
                         src="https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg" 
                         alt="Logo" 
-                        className="relative w-32 h-32 rounded-full border-4 border-black z-10 bg-white object-cover"
+                        className="relative w-20 h-20 md:w-28 md:h-28 rounded-full border-[3px] border-black z-10 bg-white object-cover"
                     />
-                    <div className="absolute -bottom-2 -right-2 bg-[#A3E635] border-2 border-black px-2 py-0.5 text-xs font-black rounded-full z-20">ONLINE</div>
+                    {clickCount > 0 && clickCount < 5 && (
+                        <div className="absolute -top-2 -right-4 bg-red-500 text-white text-[10px] px-1 rounded font-bold animate-bounce">
+                            x{clickCount}
+                        </div>
+                    )}
                 </motion.div>
 
-                <div className="space-y-2">
-                    <h1 className="text-7xl md:text-9xl font-black tracking-tighter leading-none select-none">
+                <div>
+                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none select-none">
                         KAAI
                     </h1>
-                    <div className="inline-block bg-black text-white px-4 py-1 text-sm font-bold transform -rotate-2">
-                        MODERN UTILITY PLATFORM
-                    </div>
+                    <p className="text-xs md:text-sm font-bold text-gray-500 mt-1">
+                        SIMPLE . FAST . SECURE
+                    </p>
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-4 mt-4">
+                <div className="flex flex-wrap justify-center gap-2 mt-2">
                     <Link to="/docs">
-                        <NeoButton variant="dark" className="rounded-full px-8">
-                            <BookOpen size={18}/> DOKUMENTASI
+                        <NeoButton variant="dark" className="rounded-full px-4 h-8 text-[10px]">
+                            <BookOpen size={12}/> DOCS
                         </NeoButton>
                     </Link>
-                    <NeoButton variant="white" className="rounded-full px-8 text-gray-500 cursor-default">
-                        <Terminal size={18}/> V.15.0 STABLE
+                    <NeoButton variant="white" className="rounded-full px-4 h-8 text-[10px] text-gray-500 cursor-default">
+                        <Terminal size={12}/> V.15.2
                     </NeoButton>
                 </div>
             </div>
 
-            {/* FEATURES GRID */}
+            {/* MENU GRID (Single Column on Mobile) */}
             <motion.div 
                 variants={container} initial="hidden" animate="show"
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20"
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 px-1"
             >
-                <Link to="/ytdl" className="group h-full">
-                    <motion.div variants={item} className="h-full">
-                        <NeoCard className="h-full bg-[#FFDC58] group-hover:-translate-y-2 transition-transform relative overflow-hidden" title="01. MEDIA">
-                            <Youtube size={120} className="absolute -bottom-6 -right-6 opacity-10 rotate-12"/>
-                            <div className="flex flex-col items-start justify-between h-full gap-8">
-                                <div className="p-3 bg-white border-2 border-black rounded-lg shadow-sm">
-                                    <Youtube size={32} className="text-red-600"/>
+                <Link to="/ytdl" className="group">
+                    <motion.div variants={item}>
+                        <NeoCard className="bg-[#FFDC58] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="01. MEDIA">
+                            <Youtube size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
+                            <div className="flex items-center gap-4 py-2">
+                                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
+                                    <Youtube size={24} className="text-red-600"/>
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-3xl leading-none mb-1">YOUTUBE DL</h3>
-                                    <p className="font-bold opacity-70 text-sm">Download Video & Audio MP3/MP4 dengan Metadata lengkap.</p>
-                                </div>
-                                <div className="w-full flex justify-end">
-                                    <ArrowUpRight className="w-8 h-8"/>
+                                    <h3 className="font-black text-xl leading-none">YOUTUBE DL</h3>
+                                    <p className="font-bold opacity-60 text-[10px]">Video & Audio</p>
                                 </div>
                             </div>
                         </NeoCard>
                     </motion.div>
                 </Link>
 
-                <Link to="/ai/chat" className="group h-full">
-                    <motion.div variants={item} className="h-full">
-                        <NeoCard className="h-full bg-[#A3E635] group-hover:-translate-y-2 transition-transform relative overflow-hidden" title="02. INTELLIGENCE">
-                            <MessageSquare size={120} className="absolute -bottom-6 -right-6 opacity-10 rotate-12"/>
-                            <div className="flex flex-col items-start justify-between h-full gap-8">
-                                <div className="p-3 bg-white border-2 border-black rounded-lg shadow-sm">
-                                    <MessageSquare size={32} className="text-green-700"/>
+                <Link to="/ai/chat" className="group">
+                    <motion.div variants={item}>
+                        <NeoCard className="bg-[#A3E635] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="02. AI">
+                            <MessageSquare size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
+                            <div className="flex items-center gap-4 py-2">
+                                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
+                                    <MessageSquare size={24} className="text-green-700"/>
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-3xl leading-none mb-1">KAAI CHAT</h3>
-                                    <p className="font-bold opacity-70 text-sm">Asisten AI Multi-Model (Copilot, Qwen) dengan respon cepat.</p>
-                                </div>
-                                <div className="w-full flex justify-end">
-                                    <ArrowUpRight className="w-8 h-8"/>
+                                    <h3 className="font-black text-xl leading-none">KAAI CHAT</h3>
+                                    <p className="font-bold opacity-60 text-[10px]">Asisten Pintar</p>
                                 </div>
                             </div>
                         </NeoCard>
                     </motion.div>
                 </Link>
 
-                <Link to="/ssweb" className="group h-full">
-                    <motion.div variants={item} className="h-full">
-                        <NeoCard className="h-full bg-[#FF90E8] group-hover:-translate-y-2 transition-transform relative overflow-hidden" title="03. TOOLS">
-                            <Camera size={120} className="absolute -bottom-6 -right-6 opacity-10 rotate-12"/>
-                            <div className="flex flex-col items-start justify-between h-full gap-8">
-                                <div className="p-3 bg-white border-2 border-black rounded-lg shadow-sm">
-                                    <Camera size={32} className="text-purple-700"/>
+                <Link to="/ssweb" className="group">
+                    <motion.div variants={item}>
+                        <NeoCard className="bg-[#FF90E8] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="03. TOOLS">
+                            <Camera size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
+                            <div className="flex items-center gap-4 py-2">
+                                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
+                                    <Camera size={24} className="text-purple-700"/>
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-3xl leading-none mb-1">SSWEB PRO</h3>
-                                    <p className="font-bold opacity-70 text-sm">Screenshot Website resolusi tinggi (Desktop/Mobile).</p>
-                                </div>
-                                <div className="w-full flex justify-end">
-                                    <ArrowUpRight className="w-8 h-8"/>
+                                    <h3 className="font-black text-xl leading-none">SSWEB PRO</h3>
+                                    <p className="font-bold opacity-60 text-[10px]">Screenshot Web</p>
                                 </div>
                             </div>
                         </NeoCard>
@@ -137,40 +139,25 @@ const Home = () => {
                 </Link>
             </motion.div>
 
-            {/* INFO BANNER */}
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-wrap justify-center gap-4 mb-16"
-            >
-                <div className="bg-white border-2 border-black px-4 py-2 rounded-full font-bold text-xs flex items-center gap-2 shadow-[2px_2px_0px_0px_black]">
-                    <Zap size={14} className="fill-yellow-400 text-black"/> ULTRA FAST ENGINE
-                </div>
-                <div className="bg-white border-2 border-black px-4 py-2 rounded-full font-bold text-xs flex items-center gap-2 shadow-[2px_2px_0px_0px_black]">
-                    <Shield size={14} className="fill-blue-400 text-black"/> SSL SECURED
-                </div>
-            </motion.div>
-
-            {/* CONTACT FORM */}
-            <div className="max-w-xl mx-auto mb-12">
-                <NeoCard title="SEND FEEDBACK" className="bg-white">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex gap-4">
-                            <NeoInput placeholder="Nama Kamu" value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} />
-                            <NeoInput placeholder="Judul / Topik" value={contact.title} onChange={e => setContact({...contact, title: e.target.value})} />
+            {/* CONTACT SMALL */}
+            <div className="max-w-md mx-auto mb-10">
+                <NeoCard title="KONTAK" className="bg-white">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <NeoInput placeholder="Nama" value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} />
+                            <NeoInput placeholder="Topik" value={contact.title} onChange={e => setContact({...contact, title: e.target.value})} />
                         </div>
-                        <NeoTextArea placeholder="Tulis pesan, kritik, atau saran..." rows={3} value={contact.message} onChange={e => setContact({...contact, message: e.target.value})} />
-                        <NeoButton onClick={sendContact} disabled={loading} variant="dark" className="w-full">
-                            {loading ? "MENGIRIM..." : <><Mail size={16}/> KIRIM PESAN</>}
+                        <NeoTextArea placeholder="Pesan..." rows={2} value={contact.message} onChange={e => setContact({...contact, message: e.target.value})} />
+                        <NeoButton onClick={sendContact} disabled={loading} variant="dark" className="w-full h-9 text-xs">
+                            {loading ? "..." : "KIRIM"}
                         </NeoButton>
                     </div>
                 </NeoCard>
             </div>
 
-            {/* FOOTER */}
-            <footer className="text-center pt-8 border-t-2 border-black/10">
-                <p className="font-black text-sm flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
-                    <span className="flex items-center gap-1">dibuat dgn <Heart size={14} fill="red" className="text-red-500 animate-pulse"/> dan code</span>
-                    <span>crafted by aka 🇮🇩 🇵🇸</span>
+            <footer className="text-center pt-6 border-t-2 border-black/5">
+                <p className="font-black text-[10px] md:text-xs flex flex-col items-center gap-1 opacity-50">
+                    <span className="flex items-center gap-1">crafted by aka 🇮🇩 🇵🇸</span>
                 </p>
             </footer>
         </PageWrapper>
