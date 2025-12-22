@@ -48,28 +48,40 @@ const Ytdl = () => {
     ];
 
     const handleProcess = async () => {
+        // 1. Validasi Input Kosong
         if (!url) return toast.error('⛔ URL Youtube wajib diisi!');
         if (!type) return toast.error('⛔ Pilih format (MP3/MP4) dulu!');
         
-        const regex = /^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/;
-        if (!regex.test(url)) return toast.error('⛔ Link tidak valid! Harus link YouTube.');
+        // 2. Validasi URL YouTube (DIPERBAIKI)
+        // Menerima: youtube.com, www.youtube.com, m.youtube.com, youtu.be
+        const regex = /^(https?:\/\/)?((www\.|m\.)?youtube\.com|youtu\.be)\/.+$/;
+        
+        // Pengecekan ganda: Regex ATAU string include (agar lebih aman)
+        const isYoutube = regex.test(url) || url.includes('youtube.com') || url.includes('youtu.be');
+
+        if (!isYoutube) {
+            return toast.error('⛔ Link tidak valid! Pastikan link dari YouTube.');
+        }
 
         setLoading(true);
         setData(null);
 
         try {
             const endpoint = type.value === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
+            // Request ke Backend
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, { url });
             
             if (res.data.status) {
                 setData({ ...res.data, type: type.value });
                 toast.success('✅ Data berhasil ditemukan!');
             } else {
-                throw new Error(res.data.msg);
+                throw new Error(res.data.msg || "Gagal mengambil data");
             }
         } catch (err) {
             console.error(err);
-            toast.error('❌ Gagal: ' + (err.response?.data?.msg || err.message));
+            // Menampilkan pesan error dari backend jika ada
+            const msg = err.response?.data?.msg || err.message || "Terjadi kesalahan koneksi";
+            toast.error('❌ Gagal: ' + msg);
         } finally {
             setLoading(false);
         }
@@ -79,6 +91,8 @@ const Ytdl = () => {
         if (data?.download_url) {
             window.open(data.download_url, '_blank');
             toast.success('🚀 Download dimulai...');
+        } else {
+            toast.error('Link download belum tersedia');
         }
     };
 
