@@ -60,11 +60,15 @@ const Ytdl = () => {
         try {
             const endpoint = type?.value === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
             
+            console.log("SENDING REQUEST TO:", axios.defaults.baseURL + endpoint);
+            
             const res = await axios.get(endpoint, { 
                 params: { url: url },
                 timeout: 300000 
             });
             
+            console.log("RESPONSE:", res.data);
+
             if (res.data.status) {
                 setData({ ...res.data, type: type?.value || 'video' });
                 toast.success('Video ditemukan!');
@@ -72,14 +76,22 @@ const Ytdl = () => {
                 throw new Error(res.data.msg || "Gagal mengambil data dari server");
             }
         } catch (err) {
+            console.error("ERROR DETAIL:", err);
+            
             let errorMessage = "Terjadi kesalahan sistem.";
             
-            if (err.response?.data?.msg) {
-                errorMessage = err.response.data.msg;
-            } else if (typeof err.response?.data === 'string' && err.response.data.includes('html')) {
-                errorMessage = `Server Error (${err.response.status}). Cek Log Backend.`;
-            } else if (err.code === 'ECONNABORTED') {
-                errorMessage = "Waktu habis (Timeout). Server terlalu lama merespon.";
+            if (err.response) {
+                if (err.response.data && err.response.data.msg) {
+                    errorMessage = err.response.data.msg;
+                } else if (err.response.status === 404) {
+                    errorMessage = "Endpoint API tidak ditemukan (404). Backend belum siap/salah URL.";
+                } else if (err.response.status === 500) {
+                    errorMessage = "Internal Server Error (500). Cek Console Pterodactyl.";
+                } else {
+                    errorMessage = `Error Server: ${err.response.status}`;
+                }
+            } else if (err.code === "ERR_NETWORK") {
+                errorMessage = "Gagal terhubung ke Backend! Pastikan server Pterodactyl NYALA dan URL di main.jsx BENAR.";
             } else if (err.message) {
                 errorMessage = err.message;
             }
