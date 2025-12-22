@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-neo-bg text-neo-black font-sans;
+  background-image: radial-gradient(#0e0e0e 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-left: 2px solid black;
+}
+::-webkit-scrollbar-thumb {
+  background: #FFDC58;
+  border: 2px solid black;
+}
