@@ -1,159 +1,119 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Bot, User, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
+import toast from 'react-hot-toast';
 
 const AIChat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [model, setModel] = useState('kaai cplt');
     const [loading, setLoading] = useState(false);
-    const chatEndRef = useRef(null);
+    const scrollRef = useRef(null);
 
     useEffect(() => {
-        const hour = new Date().getHours();
-        let greeting = "Selamat Pagi";
-        if (hour >= 11 && hour < 15) greeting = "Selamat Siang";
-        else if (hour >= 15 && hour < 19) greeting = "Selamat Sore";
-        else greeting = "Selamat Malam";
-
+        const h = new Date().getHours();
+        const greet = h < 12 ? "Pagi" : h < 15 ? "Siang" : h < 19 ? "Sore" : "Malam";
         setMessages([{
             id: 'init',
-            text: `Halo ${greeting}, saya Kaai. Ada yang bisa saya bantu?`,
+            text: `Halo, Selamat ${greet}! Saya Kaai (v12). Pilih model dan mulailah bertanya.`,
             sender: 'ai',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }]);
     }, []);
 
-    const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    useEffect(scrollToBottom, [messages]);
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages, loading]);
 
     const handleSend = async () => {
         if (!input.trim()) return;
-
-        const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const userMsg = { id: Date.now(), text: input, sender: 'user', time: userTime };
-        
-        setMessages(prev => [...prev, userMsg]);
+        const txt = input;
         setInput('');
+        
+        const userMsg = { id: Date.now(), text: txt, sender: 'user', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        setMessages(p => [...p, userMsg]);
         setLoading(true);
 
-        // Tentukan pesan loading
-        let progressText = "progres";
-        const lowerInput = userMsg.text.toLowerCase();
-        if (lowerInput.includes('gambar') || lowerInput.includes('image') || lowerInput.includes('foto')) {
-            progressText = "membuat gambar...";
-        }
-
-        const loadingId = Date.now() + 1;
-        setMessages(prev => [...prev, {
-            id: loadingId,
-            text: progressText,
-            sender: 'ai',
-            time: userTime,
-            isTemp: true
-        }]);
-
         try {
-            const res = await axios.get(`/api/ai?query=${encodeURIComponent(userMsg.text)}&model=${model}`);
-            const reply = res.data.status ? res.data.result : res.data.msg;
-
-            setMessages(prev => prev.map(msg => {
-                if (msg.id === loadingId) {
-                    return {
-                        ...msg,
-                        text: reply,
-                        isTemp: false,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    };
-                }
-                return msg;
-            }));
+            const res = await axios.get(`/api/ai?query=${encodeURIComponent(txt)}&model=${model}`);
+            const reply = res.data.status ? res.data.result : "Maaf, server sedang sibuk.";
+            setMessages(p => [...p, {
+                id: Date.now() + 1,
+                text: reply,
+                sender: 'ai',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }]);
         } catch (e) {
-            setMessages(prev => prev.map(msg => {
-                if (msg.id === loadingId) return { ...msg, text: "Maaf, terjadi kesalahan jaringan.", isTemp: false };
-                return msg;
-            }));
+            toast.error("Gagal terhubung ke AI.");
+            setMessages(p => [...p, { id: Date.now(), text: "Error: Jaringan bermasalah.", sender: 'ai', error: true }]);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-screen bg-[#E5DDD5] font-sans max-w-md mx-auto shadow-2xl overflow-hidden md:rounded-xl md:my-4 md:h-[90vh] md:border-4 md:border-black">
-            {/* HEADER WA STYLE SIMPLE */}
-            <div className="bg-[#075E54] px-4 py-3 flex items-center gap-3 shadow-md z-10">
-                <Link to="/">
-                    <button className="text-white"><ArrowLeft size={24}/></button>
-                </Link>
-                <div className="w-10 h-10 rounded-full bg-white border border-white/30 overflow-hidden flex-shrink-0">
-                     <img src="https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h1 className="text-white font-bold text-lg leading-none truncate">kaai</h1>
-                    <select 
-                        value={model} 
-                        onChange={(e) => setModel(e.target.value)}
-                        className="bg-transparent text-white/80 text-xs border-none outline-none p-0 mt-1 cursor-pointer hover:text-white"
-                    >
-                        <option className="text-black" value="kaai cplt">Model: Copilot</option>
-                        <option className="text-black" value="kaai qwn">Model: Qwen (Cepat)</option>
-                        <option className="text-black" value="kaai pxd">Model: Perplexed</option>
-                        <option className="text-black" value="kaai tbsk">Model: TurboSeek</option>
-                        <option className="text-black" value="kaai plc">Model: PublicAI</option>
+        <div className="flex flex-col h-screen bg-[#f0f2f5] max-w-lg mx-auto md:border-x-2 md:border-black overflow-hidden shadow-2xl">
+            <Helmet><title>Kaai Chat AI</title></Helmet>
+            
+            <div className="bg-white px-4 py-3 flex items-center gap-3 border-b-2 border-black shadow-sm z-10 shrink-0">
+                <Link to="/"><button className="p-2 hover:bg-gray-100 rounded-full border border-black transition"><ArrowLeft size={20}/></button></Link>
+                <div className="flex-1">
+                    <h1 className="font-black text-lg leading-none">KAAI CHAT</h1>
+                    <select value={model} onChange={e => setModel(e.target.value)} className="text-xs font-bold bg-transparent outline-none cursor-pointer text-gray-500 mt-1">
+                        <option value="kaai cplt">🧠 Copilot (Cerdas)</option>
+                        <option value="kaai qwn">🚀 Qwen (Cepat)</option>
+                        <option value="kaai tbsk">🔍 TurboSeek</option>
                     </select>
                 </div>
+                <button onClick={() => setMessages([])} className="p-2 text-red-500 hover:bg-red-50 rounded-full"><Trash2 size={18}/></button>
             </div>
 
-            {/* CHAT AREA */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-fixed">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 scroll-smooth" ref={scrollRef}>
                 <AnimatePresence>
-                    {messages.map((msg) => (
-                        <motion.div 
-                            key={msg.id}
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div className={`
-                                max-w-[85%] px-3 py-2 rounded-lg text-sm relative shadow-sm pb-5
-                                ${msg.sender === 'user' ? 'bg-[#DCF8C6] rounded-tr-none' : 'bg-white rounded-tl-none'}
-                                ${msg.isTemp ? 'italic opacity-80' : ''}
-                            `}>
-                                <div className="whitespace-pre-wrap leading-relaxed text-gray-800 break-words">
-                                    {msg.text}
+                    {messages.map((m) => (
+                        <motion.div key={m.id} initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`flex items-end gap-2 max-w-[85%] ${m.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                                <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center shrink-0 ${m.sender === 'user' ? 'bg-[#FFDC58]' : 'bg-[#A3E635]'}`}>
+                                    {m.sender === 'user' ? <User size={14}/> : <Bot size={14}/>}
                                 </div>
-                                <span className="absolute bottom-1 right-2 text-[10px] text-gray-500 flex items-center gap-1">
-                                    {msg.time}
-                                    {msg.sender === 'user' && <span className="text-blue-500">✓✓</span>}
-                                </span>
+                                <div className={`px-4 py-2 rounded-2xl border-2 border-black text-sm font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] ${m.sender === 'user' ? 'bg-white rounded-br-none' : 'bg-white rounded-bl-none'}`}>
+                                    <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                                    <div className={`text-[10px] mt-1 font-bold opacity-40 ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>{m.time}</div>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
+                    {loading && (
+                        <motion.div initial={{opacity:0}} animate={{opacity:1}} className="flex justify-start">
+                            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] flex gap-1">
+                                <span className="w-2 h-2 bg-black rounded-full animate-bounce"></span>
+                                <span className="w-2 h-2 bg-black rounded-full animate-bounce" style={{animationDelay:'0.1s'}}></span>
+                                <span className="w-2 h-2 bg-black rounded-full animate-bounce" style={{animationDelay:'0.2s'}}></span>
+                            </div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
-                <div ref={chatEndRef} />
             </div>
 
-            {/* INPUT AREA */}
-            <div className="bg-[#F0F0F0] p-2 flex items-end gap-2">
-                <div className="flex-1 bg-white rounded-2xl px-4 py-2 shadow-sm border border-gray-200">
-                    <textarea 
-                        rows={1}
-                        className="w-full bg-transparent outline-none text-sm resize-none max-h-24 py-1"
+            <div className="p-3 bg-white border-t-2 border-black shrink-0">
+                <div className="flex gap-2">
+                    <input 
+                        className="flex-1 bg-gray-100 border-2 border-black rounded-full px-4 py-3 text-sm font-bold focus:outline-none focus:bg-white focus:shadow-[2px_2px_0px_0px_black] transition-all"
                         placeholder="Ketik pesan..."
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        // Enter = New Line (Seperti WA di HP)
+                        onChange={e => setInput(e.target.value)}
+                        onKeyPress={e => e.key === 'Enter' && handleSend()}
+                        disabled={loading}
                     />
+                    <button onClick={handleSend} disabled={loading || !input.trim()} className="bg-black text-white w-12 h-12 rounded-full flex items-center justify-center border-2 border-black hover:bg-gray-800 disabled:opacity-50 transition-all active:scale-90">
+                        <Send size={20}/>
+                    </button>
                 </div>
-                <button 
-                    onClick={handleSend}
-                    disabled={loading || !input.trim()}
-                    className="bg-[#00897B] w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[#00796B] active:scale-90 transition-transform disabled:opacity-50 disabled:scale-100"
-                >
-                    <Send size={20} className={loading ? "animate-pulse" : "ml-1"} />
-                </button>
             </div>
         </div>
     );
