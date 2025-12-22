@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Ytdl from './pages/Ytdl';
 import AIChat from './pages/AIChat';
 import SSWeb from './pages/SSWeb';
+import Docs from './pages/Docs'; // Import Docs
 
 function App() {
   return (
@@ -13,8 +14,6 @@ function App() {
         position="top-center" 
         reverseOrder={false}
         gutter={8}
-        containerClassName=""
-        containerStyle={{}}
         toastOptions={{
             duration: 3000,
             style: {
@@ -24,7 +23,8 @@ function App() {
                 boxShadow: '4px 4px 0px 0px black',
                 fontWeight: 'bold',
                 borderRadius: '8px',
-                background: '#fff'
+                background: '#fff',
+                fontFamily: 'Space Grotesk'
             },
             success: {
                 style: { background: '#A3E635' },
@@ -38,6 +38,7 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/docs" element={<Docs />} /> {/* Route Baru */}
         <Route path="/ytdl" element={<Ytdl />} />
         <Route path="/ai/chat" element={<AIChat />} />
         <Route path="/ssweb" element={<SSWeb />} />
