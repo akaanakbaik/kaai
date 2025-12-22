@@ -6,21 +6,40 @@
 
 body {
   font-family: 'Space Grotesk', sans-serif;
-  background-color: #f3f4f6;
+  color: #000;
+  background-color: #ffffff;
+  /* Membuat pola kotak-kotak (Grid Paper) */
+  background-image: 
+    linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+    linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+  background-size: 40px 40px;
+  min-height: 100vh;
   overflow-x: hidden;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #fff;
+  border-left: 2px solid #000;
 }
 ::-webkit-scrollbar-thumb {
   background: #000;
-  border-radius: 4px;
+  border: 2px solid #fff;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #333;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
