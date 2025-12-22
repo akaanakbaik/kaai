@@ -60,7 +60,12 @@ const Ytdl = () => {
 
         try {
             const endpoint = type.value === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4';
-            const res = await axios.post(endpoint, { url });
+            
+            // --- PERBAIKAN DI SINI (UBAH POST JADI GET) ---
+            // Menggunakan params untuk mengirim URL agar aman dari error 405
+            const res = await axios.get(endpoint, { 
+                params: { url: url } 
+            });
             
             if (res.data.status) {
                 setData({ ...res.data, type: type.value });
@@ -69,6 +74,7 @@ const Ytdl = () => {
                 throw new Error(res.data.msg);
             }
         } catch (err) {
+            console.error(err);
             toast.error('Gagal: ' + (err.response?.data?.msg || err.message));
         } finally {
             setLoading(false);
