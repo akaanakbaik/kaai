@@ -1,14 +1,17 @@
+/* 1. IMPORT FONT (Space Grotesk untuk Web Utama, Helvetica untuk Chat) */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 2. GLOBAL BODY STYLE (Menggunakan Style LAMA: Grid Pattern) */
 body {
   font-family: 'Space Grotesk', sans-serif;
   color: #000;
   background-color: #ffffff;
-  /* MENGGUNAKAN VERSI BARU: Grid lebih rapat (24px) & warna lebih halus agar Mobile Friendly */
+  /* Grid Pattern Rapat (24px) - Mobile Friendly */
   background-image: 
     linear-gradient(to right, #f2f2f2 1px, transparent 1px),
     linear-gradient(to bottom, #f2f2f2 1px, transparent 1px);
@@ -17,7 +20,7 @@ body {
   overflow-x: hidden;
 }
 
-/* SCROLLBAR: Menggunakan versi baru (Lebih tipis/6px) agar tidak memakan layar HP */
+/* 3. CUSTOM SCROLLBAR (Style LAMA: Hitam Putih Elegan) */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -32,7 +35,7 @@ body {
   background: #333;
 }
 
-/* ANIMATIONS: Mengembalikan fitur ini dari versi SEBELUMNYA */
+/* 4. ANIMASI LAMA (Float untuk Home Page) */
 @keyframes float {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -41,4 +44,39 @@ body {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* 5. ANIMASI BARU (Wajib ada untuk Chat AI WhatsApp Clone) */
+.animate-in { 
+  animation-duration: 0.2s; 
+  animation-fill-mode: both; 
+}
+.fade-in { 
+  animation-name: fadeIn; 
+}
+.slide-in-from-top-5 { 
+  animation-name: slideInTop; 
+}
+.zoom-in-95 { 
+  animation-name: zoomIn; 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; } 
+  to { opacity: 1; } 
+}
+
+@keyframes slideInTop { 
+  from { transform: translateY(-20px); opacity: 0; } 
+  to { transform: translateY(0); opacity: 1; } 
+}
+
+@keyframes zoomIn { 
+  from { transform: scale(0.95); opacity: 0; } 
+  to { transform: scale(1); opacity: 1; } 
+}
+
+/* UTILITY KHUSUS CHAT APP (Agar background WA menimpa Grid) */
+.font-wa {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
