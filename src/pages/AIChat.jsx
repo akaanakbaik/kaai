@@ -2,83 +2,66 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
     Send, ArrowLeft, MoreVertical, Phone, Video, Search, Paperclip, 
-    Mic, X, Reply, CheckCheck, Trash2, Info, Smile, Plus, Image as ImageIcon 
+    Mic, X, Reply, CheckCheck, Trash2, Info, Smile, Plus, ChevronRight, Check
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 
 // --- CONFIGURATION ---
 const models = [
-    { id: 'kaai cplt', name: 'Kaai Copilot', desc: 'Model standar cerdas.', type: 'General', time: 'Now' },
-    { id: 'meta ai', name: 'Meta AI', desc: 'Model canggih Meta (Llama 3).', type: 'Advanced', time: '10:00' },
-    { id: 'qwen ai', name: 'Qwen AI', desc: 'Pintar dari Alibaba Cloud.', type: 'Reasoning', time: 'Yesterday' },
-    { id: 'turboseek', name: 'TurboSeek', desc: 'Mesin pencari AI cepat.', type: 'Search', time: 'Yesterday' },
-    { id: 'webpilot', name: 'WebPilot', desc: 'Browsing & ekstraksi web.', type: 'Web', time: 'Tue' },
-    { id: 'ciciai', name: 'Cici AI', desc: 'Asisten personal ramah.', type: 'Chatbot', time: 'Mon' },
-    { id: 'copilot+memori', name: 'Copilot + Memory', desc: 'Ingatan jangka panjang.', type: 'Memory', time: 'Sun' }
+    { id: 'kaai cplt', name: 'Kaai Copilot', desc: 'Model standar cerdas untuk percakapan umum.', type: 'General' },
+    { id: 'meta ai', name: 'Meta AI', desc: 'Model canggih dari Meta (Llama 3).', type: 'Advanced' },
+    { id: 'qwen ai', name: 'Qwen AI', desc: 'Model pintar dari Alibaba Cloud.', type: 'Reasoning' },
+    { id: 'turboseek', name: 'TurboSeek', desc: 'Mesin pencari AI super cepat.', type: 'Search' },
+    { id: 'webpilot', name: 'WebPilot', desc: 'Spesialis browsing dan ekstraksi web.', type: 'Web' },
+    { id: 'ciciai', name: 'Cici AI', desc: 'Asisten personal yang ramah.', type: 'Chatbot' },
+    { id: 'copilot+memori', name: 'Copilot + Memory', desc: 'Model khusus dengan ingatan jangka panjang.', type: 'Memory' }
 ];
 
 const AIChat = () => {
-    // --- STATE MANAGEMENT ---
+    // --- STATE ---
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const [model, setModel] = useState('kaai cplt'); // Default Model
-    const [sessionId, setSessionId] = useState('');
+    const [model, setModel] = useState('kaai cplt');
+    const [sessionId, setSessionId] = useState(''); // Default kosong
     const [loading, setLoading] = useState(false);
-    const [showSidebar, setShowSidebar] = useState(true); // Control Sidebar di Mobile
     const [replyTo, setReplyTo] = useState(null);
     const [isTyping, setIsTyping] = useState(false);
-    const [showModelMenu, setShowModelMenu] = useState(false); // Dropdown menu header
+    const [showInfoPanel, setShowInfoPanel] = useState(false); // Pengganti Sidebar, Panel Info Kanan
 
     const scrollRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Get Current Model Details
     const currentModelInfo = models.find(m => m.id === model) || models[0];
 
     // --- EFFECTS ---
-    // Auto Scroll ke bawah
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, isTyping, replyTo]);
 
-    // Handle Mobile View: Hide Sidebar saat masuk chat room
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 768) {
-                setShowSidebar(true); // Default tampilkan list chat di mobile awal
-            } else {
-                setShowSidebar(true); // Desktop selalu tampil
-            }
-        };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    // --- LOGIC FUNCTIONS ---
+    // --- LOGIC ---
     const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const handleModelSelect = (selectedModelId) => {
-        setModel(selectedModelId);
-        // Di mobile, setelah pilih model langsung masuk ke chat room
-        if (window.innerWidth < 768) setShowSidebar(false); 
-    };
 
     const handleSend = async () => {
         if (!input.trim()) return;
+
+        // Validasi Session ID untuk model Memory
+        if (model === 'copilot+memori' && !sessionId.trim()) {
+            toast.error("Wajib isi Session ID untuk model Memory!", { icon: '🧠' });
+            setShowInfoPanel(true); // Buka panel setting otomatis
+            return;
+        }
+
         const txt = input;
         const currentReply = replyTo;
         
-        // Reset Input UI
         setInput('');
         setReplyTo(null);
-        if (inputRef.current) inputRef.current.style.height = 'auto'; // Reset height textarea
-        
-        // Optimistic Update
+        if (inputRef.current) inputRef.current.style.height = 'auto';
+
         const newMessage = {
             id: Date.now(),
             text: txt,
@@ -93,13 +76,11 @@ const AIChat = () => {
         setLoading(true);
 
         try {
-            // Prepare Query
             let finalQuery = txt;
             if (currentReply) {
                 finalQuery = `[Replying to ${currentReply.sender}: "${currentReply.text.substring(0, 50)}..."] \n${txt}`;
             }
 
-            // API Call
             const res = await axios.get('/api/ai', {
                 params: {
                     query: finalQuery,
@@ -110,10 +91,8 @@ const AIChat = () => {
 
             const replyText = res.data.status ? res.data.result : (res.data.msg || "Server sibuk.");
             
-            // Update Message Status (Centang Dua Biru)
             setMessages(p => p.map(m => m.id === newMessage.id ? { ...m, status: 'read' } : m));
             
-            // Simulate Typing Delay for Realism
             setTimeout(() => {
                 setMessages(p => [...p, {
                     id: Date.now() + 1,
@@ -130,7 +109,7 @@ const AIChat = () => {
             setIsTyping(false);
             setMessages(p => [...p, { 
                 id: Date.now(), 
-                text: "Error: Jaringan bermasalah atau API down.", 
+                text: "Error: Jaringan bermasalah.", 
                 sender: 'bot', 
                 error: true, 
                 time: formatTime() 
@@ -140,11 +119,14 @@ const AIChat = () => {
         }
     };
 
-    const handleBackToSidebar = () => {
-        setShowSidebar(true);
+    const handleClearChat = () => {
+        if(window.confirm("Hapus semua pesan?")) {
+            setMessages([]);
+            toast.success("Chat bersih");
+            setShowInfoPanel(false);
+        }
     };
 
-    // Auto-resize Textarea
     const handleInputResize = (e) => {
         setInput(e.target.value);
         e.target.style.height = 'auto';
@@ -153,239 +135,236 @@ const AIChat = () => {
 
     // --- RENDER ---
     return (
-        <div className="relative h-[100dvh] w-full bg-[#d1d7db] flex justify-center items-center overflow-hidden font-sans">
-            <Helmet><title>WhatsApp AI - {currentModelInfo.name}</title></Helmet>
+        <div className="relative h-[100dvh] w-full bg-[#111b21] flex justify-center items-center overflow-hidden font-sans">
+            <Helmet><title>KAAI Chat</title></Helmet>
 
-            {/* Desktop Background Strip (Hijau di atas) */}
-            <div className="absolute top-0 left-0 w-full h-[127px] bg-[#00a884] z-0 hidden md:block"></div>
-
-            {/* APP CONTAINER (Card Floating di Desktop, Full di Mobile) */}
-            <div className="relative w-full h-full md:h-[95%] md:max-w-[1600px] md:w-[calc(100%-38px)] bg-[#f0f2f5] md:rounded-lg shadow-lg flex overflow-hidden z-10">
+            {/* Container Utama (Responsive: Full di Mobile, Card di Desktop) */}
+            <div className="relative w-full h-full md:max-w-[500px] md:h-[95vh] bg-[#0b141a] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#202c33]">
                 
-                {/* === LEFT SIDEBAR (CHAT LIST) === */}
-                <aside className={`${showSidebar ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[30%] md:min-w-[350px] md:max-w-[450px] bg-white border-r border-[#e9edef] h-full absolute md:relative z-20`}>
+                {/* === HEADER === */}
+                <header className="h-[60px] bg-[#202c33] px-3 py-2 flex items-center justify-between z-20 shrink-0 shadow-sm cursor-pointer" onClick={() => setShowInfoPanel(true)}>
+                    <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10">
+                            <img src={`https://ui-avatars.com/api/?name=${currentModelInfo.name}&background=00a884&color=fff`} alt="AI" className="w-full h-full object-cover"/>
+                        </div>
+                        
+                        {/* Info Nama & Status */}
+                        <div className="flex flex-col justify-center">
+                            <h1 className="text-[#e9edef] font-medium text-base leading-tight flex items-center gap-1">
+                                {currentModelInfo.name} 
+                                <span className="text-[10px] bg-[#00a884] text-white px-1 rounded ml-1">{currentModelInfo.type}</span>
+                            </h1>
+                            <span className="text-[#8696a0] text-[13px] truncate">
+                                {isTyping ? <span className="text-[#00a884]">sedang mengetik...</span> : 'Ketuk di sini untuk info kontak'}
+                            </span>
+                        </div>
+                    </div>
                     
-                    {/* Sidebar Header */}
-                    <header className="h-[60px] bg-[#f0f2f5] px-4 flex justify-between items-center shrink-0 border-b border-[#e9edef] md:border-none">
-                        <div className="w-10 h-10 rounded-full overflow-hidden cursor-pointer">
-                            <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User" className="w-full h-full object-cover"/>
-                        </div>
-                        <div className="flex gap-6 text-[#54656f]">
-                            <button title="Komunitas"><i className="hidden md:block">👥</i></button>
-                            <button title="Status"><div className="w-6 h-6 rounded-full border-2 border-[#54656f] border-dashed"></div></button>
-                            <button title="Saluran Baru"><Plus size={24}/></button>
-                            <button title="Menu"><MoreVertical size={24}/></button>
-                        </div>
-                    </header>
-
-                    {/* Search Bar */}
-                    <div className="px-3 py-2 bg-white border-b border-[#e9edef]">
-                        <div className="bg-[#f0f2f5] rounded-lg px-3 py-1.5 flex items-center gap-3">
-                            <Search size={18} className="text-[#54656f]"/>
-                            <input type="text" placeholder="Cari atau mulai chat baru" className="bg-transparent w-full outline-none text-sm text-[#3b4a54] placeholder:text-[#54656f]"/>
-                        </div>
+                    <div className="flex items-center gap-4 text-[#00a884]">
+                        <Video size={24} className="opacity-80"/>
+                        <Phone size={22} className="opacity-80"/>
+                        <MoreVertical size={22} className="opacity-80"/>
                     </div>
+                </header>
 
-                    {/* Chat List */}
-                    <div className="flex-1 overflow-y-auto bg-white custom-scrollbar">
-                        <div className="px-3 pt-3 pb-2 text-[#008069] text-sm font-medium">AI Models Available</div>
-                        {models.map((m) => (
-                            <div 
-                                key={m.id} 
-                                onClick={() => handleModelSelect(m.id)}
-                                className={`flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors ${model === m.id ? 'bg-[#f0f2f5]' : ''}`}
-                            >
-                                <div className="relative shrink-0">
-                                    <img 
-                                        src={`https://ui-avatars.com/api/?name=${m.name.replace(' ', '+')}&background=${model === m.id ? '00a884' : 'random'}&color=fff`} 
-                                        alt={m.name} 
-                                        className="w-[49px] h-[49px] rounded-full object-cover"
-                                    />
-                                </div>
-                                <div className="flex-1 border-b border-[#f0f2f5] pb-3 min-w-0">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                        <h3 className="text-[#111b21] font-normal text-[17px] truncate">{m.name}</h3>
-                                        <span className={`text-xs ${model === m.id ? 'text-[#00a884]' : 'text-[#667781]'}`}>{m.time}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-[#667781] text-[14px] truncate pr-2">{m.desc}</p>
-                                        {model === m.id && (
-                                            <span className="w-5 h-5 bg-[#00a884] text-white text-[10px] flex items-center justify-center rounded-full shrink-0">1</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </aside>
-
-
-                {/* === RIGHT SIDE (CHAT ROOM) === */}
-                <main className={`${!showSidebar ? 'flex' : 'hidden'} md:flex flex-col flex-1 bg-[#efeae2] h-full relative`}>
-                    
-                    {/* Chat Background Pattern */}
-                    <div className="absolute inset-0 opacity-40 z-0 pointer-events-none" 
-                         style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')" }}>
-                    </div>
-
-                    {/* Chat Header */}
-                    <header className="h-[60px] bg-[#f0f2f5] px-4 py-2 flex items-center justify-between shrink-0 z-10 border-b border-[#e9edef] md:border-none">
-                        <div className="flex items-center gap-3">
-                            <button onClick={handleBackToSidebar} className="md:hidden text-[#54656f] mr-1">
-                                <ArrowLeft size={24}/>
-                            </button>
-                            <div className="w-10 h-10 rounded-full overflow-hidden cursor-pointer">
-                                <img src={`https://ui-avatars.com/api/?name=${currentModelInfo.name}&background=00a884&color=fff`} alt="AI" className="w-full h-full object-cover"/>
-                            </div>
-                            <div className="flex flex-col justify-center cursor-pointer">
-                                <h1 className="text-[#111b21] font-medium text-base leading-tight">{currentModelInfo.name}</h1>
-                                <span className="text-[#667781] text-[13px] truncate">
-                                    {isTyping ? <span className="text-[#00a884] font-medium">sedang mengetik...</span> : 'Online'}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-5 text-[#54656f]">
-                            <button className="hidden md:block"><Video size={22}/></button>
-                            <button className="hidden md:block"><Phone size={22}/></button>
-                            <div className="relative">
-                                <button onClick={() => setShowModelMenu(!showModelMenu)}><Search size={22} className="md:hidden"/><MoreVertical size={22} className="hidden md:block"/></button>
-                                {/* Dropdown Menu (Optional Logic) */}
-                                {showModelMenu && (
-                                    <div className="absolute right-0 top-10 bg-white shadow-xl rounded-lg py-2 w-48 z-50 animate-in fade-in zoom-in-95">
-                                        <button onClick={() => setMessages([])} className="w-full text-left px-4 py-3 hover:bg-[#f0f2f5] text-[#111b21]">Bersihkan Chat</button>
-                                        <button onClick={() => setShowModelMenu(false)} className="w-full text-left px-4 py-3 hover:bg-[#f0f2f5] text-[#111b21]">Info Kontak</button>
-                                    </div>
+                {/* === CHAT AREA === */}
+                <div 
+                    className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#0b141a] scroll-smooth custom-scrollbar relative" 
+                    ref={scrollRef}
+                    style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')", backgroundBlendMode: 'soft-light', backgroundSize: '300px' }}
+                >
+                    {/* SYSTEM MESSAGE / END-TO-END BOX (Scrollable Item #1) */}
+                    <div className="flex flex-col items-center justify-center mb-6 mt-2 w-full px-4">
+                        <div className="bg-[#1f2c34] text-[#ffd279] text-[12.5px] p-3 rounded-lg shadow-sm text-center w-full border border-[#233138] leading-relaxed">
+                            <p className="mb-2 font-medium flex justify-center items-center gap-1">
+                                🔒 Pesan terenkripsi secara end-to-end.
+                            </p>
+                            <div className="text-[#8696a0] text-xs text-left space-y-1 bg-[#111b21]/50 p-2 rounded">
+                                <p>• <b>Ganti Model:</b> Ketuk nama bot di atas (header) untuk buka menu.</p>
+                                <p>• <b>Clear Chat:</b> Ada di menu info kontak paling bawah.</p>
+                                {model === 'copilot+memori' && (
+                                    <p className="text-[#00a884]">
+                                        • <b>Memory Mode:</b> Wajib isi <u>Session ID</u> unik di menu info agar bot mengingat percakapan Anda.
+                                    </p>
                                 )}
                             </div>
                         </div>
-                    </header>
-
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-4 z-10 scroll-smooth custom-scrollbar" ref={scrollRef}>
-                        {/* Encryption Notice */}
-                        <div className="flex justify-center mb-6">
-                            <div className="bg-[#ffeecd] text-[#54656f] text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm text-center max-w-[90%] md:max-w-[60%]">
-                                🔒 Pesan dan panggilan dilindungi enkripsi end-to-end. KAAI tidak dapat membaca atau mendengarkannya.
-                            </div>
-                        </div>
-
-                        {/* Messages Map */}
-                        {messages.map((m) => (
-                            <motion.div 
-                                key={m.id} 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                className={`flex w-full mb-1 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div className={`relative max-w-[85%] md:max-w-[65%] rounded-lg px-2 py-1.5 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] text-[14.2px] leading-[19px] 
-                                    ${m.sender === 'user' ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'}`}
-                                >
-                                    {/* Tail SVG (Segitiga Bubble) */}
-                                    <span className={`absolute top-0 w-0 h-0 border-[6px] border-transparent 
-                                        ${m.sender === 'user' ? '-right-[8px] border-t-[#d9fdd3]' : '-left-[8px] border-t-white'}`}>
-                                    </span>
-
-                                    {/* Reply Preview */}
-                                    {m.reply && (
-                                        <div className="mb-1 bg-black/5 border-l-4 border-[#00a884] rounded-[4px] p-1.5 text-xs cursor-pointer" onClick={() => {
-                                            // Scroll logic optional
-                                        }}>
-                                            <div className="font-bold text-[#00a884] mb-0.5">{m.reply.sender === 'user' ? 'Anda' : currentModelInfo.name}</div>
-                                            <div className="truncate text-[#667781]">{m.reply.text}</div>
-                                        </div>
-                                    )}
-
-                                    {/* Message Text */}
-                                    <div className="whitespace-pre-wrap break-words text-[#111b21] pb-1 pr-1">{m.text}</div>
-
-                                    {/* Meta Info (Time & Check) */}
-                                    <div className="flex justify-end items-center gap-1 mt-[-4px] float-right relative top-1 ml-2">
-                                        <span className="text-[11px] text-[#667781] min-w-fit">{m.time}</span>
-                                        {m.sender === 'user' && (
-                                            <span className={m.status === 'read' ? 'text-[#53bdeb]' : 'text-[#8696a0]'}>
-                                                <CheckCheck size={16}/> 
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Hover Options (Reply) */}
-                                    <button 
-                                        onClick={() => setReplyTo(m)} 
-                                        className="absolute top-0 right-0 p-1 bg-gradient-to-l from-black/10 to-transparent opacity-0 hover:opacity-100 transition-opacity rounded-tr-lg"
-                                    >
-                                        <Reply size={14} className="text-[#54656f]"/>
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
                     </div>
 
-                    {/* Chat Input Area */}
-                    <footer className="bg-[#f0f2f5] px-2 py-2 flex items-end gap-2 z-20 shrink-0 min-h-[62px]">
-                        
-                        {/* Reply Indicator Panel */}
-                        <AnimatePresence>
-                            {replyTo && (
-                                <motion.div 
-                                    initial={{ y: 20, opacity: 0 }} 
-                                    animate={{ y: 0, opacity: 1 }} 
-                                    exit={{ y: 20, opacity: 0 }} 
-                                    className="absolute bottom-[62px] left-0 right-0 bg-[#f0f2f5] border-t border-black/5 p-2 z-30 flex justify-center"
-                                >
-                                    <div className="w-full max-w-[95%] bg-white rounded-lg border-l-4 border-[#00a884] p-2 flex justify-between items-center shadow-md">
-                                        <div className="overflow-hidden">
-                                            <div className="text-[#00a884] text-xs font-bold">{replyTo.sender === 'user' ? 'Anda' : currentModelInfo.name}</div>
-                                            <div className="text-[#667781] text-xs truncate">{replyTo.text}</div>
-                                        </div>
-                                        <button onClick={() => setReplyTo(null)}><X size={20} className="text-[#54656f]"/></button>
+                    {/* MESSAGES LIST */}
+                    {messages.map((m) => (
+                        <motion.div 
+                            key={m.id} 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            className={`flex w-full mb-1 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`relative max-w-[85%] rounded-lg px-2 py-1.5 shadow-sm text-[14.2px] leading-[19px] break-words
+                                ${m.sender === 'user' ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-none' : 'bg-[#202c33] text-[#e9edef] rounded-tl-none'}`}
+                            >
+                                {/* Reply Context */}
+                                {m.reply && (
+                                    <div className="mb-1 bg-black/20 border-l-4 border-[#00a884] rounded-[4px] p-1.5 text-xs cursor-pointer opacity-80" onClick={() => {
+                                        // Optional scroll logic
+                                    }}>
+                                        <div className="font-bold text-[#00a884] mb-0.5">{m.reply.sender === 'user' ? 'Anda' : currentModelInfo.name}</div>
+                                        <div className="truncate text-[#cfd3d5]">{m.reply.text}</div>
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                )}
 
-                        <div className="flex items-center gap-2 pb-2">
-                            <button className="p-2 text-[#54656f] hover:bg-black/5 rounded-full"><Smile size={26}/></button>
-                            <button className="p-2 text-[#54656f] hover:bg-black/5 rounded-full"><Plus size={26}/></button>
-                        </div>
-                        
-                        <div className="flex-1 bg-white rounded-lg px-4 py-2 my-1 shadow-sm flex items-center min-h-[42px]">
-                            <textarea
-                                ref={inputRef}
-                                rows={1}
-                                className="bg-transparent w-full text-[#111b21] outline-none text-[15px] placeholder-[#667781] resize-none overflow-hidden max-h-[120px]"
-                                placeholder="Ketik pesan"
-                                value={input}
-                                onChange={handleInputResize}
-                                onKeyDown={e => {
-                                    if(e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                            />
-                        </div>
-                        
-                        <div className="pb-2">
-                            {input.trim() ? (
-                                <button onClick={handleSend} className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] shadow-sm transition-all transform hover:scale-105">
-                                    <Send size={20} fill="white" />
-                                </button>
-                            ) : (
-                                <button className="p-3 text-[#54656f] hover:bg-black/5 rounded-full">
-                                    <Mic size={24}/>
-                                </button>
-                            )}
-                        </div>
-                    </footer>
+                                {/* Message Text */}
+                                <div className="pb-1 pr-1">{m.text}</div>
 
-                </main>
+                                {/* Meta (Time & Check) */}
+                                <div className="flex justify-end items-center gap-1 mt-[-2px] float-right relative top-1 ml-3">
+                                    <span className="text-[11px] text-[#8696a0]">{m.time}</span>
+                                    {m.sender === 'user' && (
+                                        <span className={m.status === 'read' ? 'text-[#53bdeb]' : 'text-[#8696a0]'}>
+                                            <CheckCheck size={15}/> 
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Reply Trigger (Hidden untill hover) */}
+                                <button 
+                                    onClick={() => setReplyTo(m)} 
+                                    className="absolute top-0 right-0 p-1 opacity-0 hover:opacity-100 transition-opacity bg-black/20 rounded-bl-lg"
+                                >
+                                    <Reply size={12} className="text-white"/>
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* === INPUT AREA === */}
+                <footer className="bg-[#202c33] px-2 py-2 flex items-end gap-2 z-20 shrink-0 min-h-[62px]">
+                    <AnimatePresence>
+                        {replyTo && (
+                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="absolute bottom-[62px] left-0 right-0 bg-[#1f2c34] border-t border-[#2a3942] p-2 z-30 flex justify-center">
+                                <div className="w-full bg-[#111b21] rounded-lg border-l-4 border-[#00a884] p-2 flex justify-between items-center shadow-md">
+                                    <div className="overflow-hidden">
+                                        <div className="text-[#00a884] text-xs font-bold">{replyTo.sender === 'user' ? 'Anda' : currentModelInfo.name}</div>
+                                        <div className="text-[#8696a0] text-xs truncate">{replyTo.text}</div>
+                                    </div>
+                                    <button onClick={() => setReplyTo(null)}><X size={20} className="text-[#8696a0]"/></button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <button className="p-2 text-[#8696a0] hover:text-white rounded-full mb-1"><Smile size={24}/></button>
+                    <button className="p-2 text-[#8696a0] hover:text-white rounded-full mb-1"><Plus size={24}/></button>
+                    
+                    <div className="flex-1 bg-[#2a3942] rounded-xl px-4 py-2 my-1 shadow-sm flex items-center min-h-[42px]">
+                        <textarea
+                            ref={inputRef}
+                            rows={1}
+                            className="bg-transparent w-full text-[#e9edef] outline-none text-[15px] placeholder-[#8696a0] resize-none overflow-hidden max-h-[120px]"
+                            placeholder="Ketik pesan"
+                            value={input}
+                            onChange={handleInputResize}
+                            onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                        />
+                    </div>
+                    
+                    <div className="pb-1">
+                        <button 
+                            onClick={input.trim() ? handleSend : null} 
+                            className={`p-3 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${input.trim() ? 'bg-[#00a884] hover:bg-[#008f6f]' : 'bg-[#2a3942]'}`}
+                        >
+                            {input.trim() ? <Send size={20} className="text-white ml-0.5" /> : <Mic size={20} className="text-[#8696a0]"/>}
+                        </button>
+                    </div>
+                </footer>
+
+                {/* === INFO PANEL OVERLAY (SETTINGS / CONTACT INFO) === */}
+                <AnimatePresence>
+                    {showInfoPanel && (
+                        <motion.div 
+                            initial={{ x: '100%' }} 
+                            animate={{ x: 0 }} 
+                            exit={{ x: '100%' }} 
+                            transition={{ type: 'tween', duration: 0.3 }} 
+                            className="absolute inset-0 z-50 bg-[#0b141a] flex flex-col"
+                        >
+                            {/* Panel Header */}
+                            <div className="bg-[#202c33] h-[60px] px-4 flex items-center gap-4 shrink-0 shadow-md">
+                                <button onClick={() => setShowInfoPanel(false)} className="text-[#aebac1]"><ArrowLeft size={24}/></button>
+                                <h2 className="text-[#e9edef] font-medium text-lg">Info Kontak</h2>
+                            </div>
+
+                            {/* Panel Content */}
+                            <div className="flex-1 overflow-y-auto pb-10 bg-[#0b141a]">
+                                {/* Profile Section */}
+                                <div className="bg-[#111b21] flex flex-col items-center py-8 mb-3 shadow-sm">
+                                    <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-4 border-[#202c33]">
+                                        <img src={`https://ui-avatars.com/api/?name=${currentModelInfo.name}&background=00a884&color=fff`} className="w-full h-full object-cover"/>
+                                    </div>
+                                    <h2 className="text-[#e9edef] text-2xl font-medium">{currentModelInfo.name}</h2>
+                                    <p className="text-[#8696a0] text-lg mt-1">{currentModelInfo.type}</p>
+                                </div>
+
+                                {/* Session ID Section (Only for Memory Model) */}
+                                {model === 'copilot+memori' && (
+                                    <div className="bg-[#111b21] p-4 mb-3 shadow-sm animate-in fade-in">
+                                        <p className="text-[#00a884] text-sm font-bold mb-2 uppercase tracking-wider">Memory Settings</p>
+                                        <p className="text-[#8696a0] text-xs mb-3">Masukkan ID unik (bebas) agar AI mengingat percakapan ini nanti.</p>
+                                        <div className="flex items-center bg-[#202c33] rounded-lg px-3 py-2 border border-[#2a3942]">
+                                            <span className="text-[#8696a0] mr-2">ID:</span>
+                                            <input 
+                                                value={sessionId} 
+                                                onChange={e => setSessionId(e.target.value.replace(/[^a-zA-Z0-9-_]/g, ''))} 
+                                                placeholder="Contoh: user_123" 
+                                                className="w-full bg-transparent text-[#e9edef] outline-none font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Model Selector */}
+                                <div className="bg-[#111b21] p-4 mb-3 shadow-sm">
+                                    <p className="text-[#8696a0] text-sm font-medium mb-3 uppercase">Pilih Model AI</p>
+                                    <div className="space-y-0">
+                                        {models.map(m => (
+                                            <button 
+                                                key={m.id} 
+                                                onClick={() => { setModel(m.id); setShowInfoPanel(false); }} 
+                                                className={`w-full flex items-center justify-between p-3 border-b border-[#202c33] last:border-0 hover:bg-[#202c33] transition-colors`}
+                                            >
+                                                <div className="text-left flex-1">
+                                                    <div className={`text-[16px] ${model === m.id ? 'text-[#00a884] font-medium' : 'text-[#e9edef]'}`}>{m.name}</div>
+                                                    <div className="text-[#8696a0] text-xs mt-0.5">{m.desc}</div>
+                                                </div>
+                                                {model === m.id && <Check size={18} className="text-[#00a884] ml-3"/>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="bg-[#111b21] p-4 mb-3 shadow-sm">
+                                    <button onClick={handleClearChat} className="w-full flex items-center gap-3 text-[#f15c6d] font-medium py-2 hover:bg-[#202c33] px-2 rounded transition">
+                                        <Trash2 size={20}/>
+                                        Bersihkan Chat
+                                    </button>
+                                </div>
+
+                                <div className="p-4 text-center">
+                                    <p className="text-[#667781] text-xs">KAAI AI v2.0 • End-to-End Encryption</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
             
-            {/* Custom Scrollbar Styles for Tailwind (Inject via style tag or global css) */}
+            {/* Styles scrollbar khusus */}
             <style>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.1); border-radius: 10px; }
             `}</style>
         </div>
     );
