@@ -97,7 +97,7 @@ const AIChat = () => {
                         </button>
                         <div className="flex items-center gap-3" onClick={() => setShowInfoPanel(true)}>
                             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
-                                <img src={`https://ui-avatars.com/api/?name=${currentModelInfo.name}&background=00a884&color=fff`} alt="AI" className="w-full h-full object-cover"/>
+                                <img src="https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg" alt="AI" className="w-full h-full object-cover"/>
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h1 className="text-[#111b21] dark:text-[#e9edef] font-medium text-[16px] leading-tight">{currentModelInfo.name}</h1>
@@ -187,7 +187,7 @@ const AIChat = () => {
                             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar">
                                 <div className="bg-white dark:bg-[#111b21] flex flex-col items-center py-8 mb-3 shadow-sm transition-colors duration-300">
                                     <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border shadow-sm">
-                                        <img src={`https://ui-avatars.com/api/?name=${currentModelInfo.name}&background=00a884&color=fff`} className="w-full h-full object-cover"/>
+                                        <img src="https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg" className="w-full h-full object-cover"/>
                                     </div>
                                     <h2 className="text-[#111b21] dark:text-[#e9edef] text-[22px] font-normal">{currentModelInfo.name}</h2>
                                     <p className="text-[#667781] dark:text-[#8696a0] text-[16px] mt-1">{currentModelInfo.type}</p>
