@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Download, Play, Music, Image as ImageIcon, Loader2, Link as LinkIcon, AlertTriangle } from 'lucide-react';
+import { Play, Music, Image as ImageIcon, Loader2, Link as LinkIcon, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout';
-import config from '../../config.js'; // Pastikan path config benar, atau hardcode URL jika perlu
 
 const AllInDL = () => {
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
 
-    // Ganti base URL sesuai server kamu jika deploy, atau kosongkan jika proxy/vite.config sudah diatur
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; 
+    // ✅ AMBIL URL DARI SETTINGAN MAIN.JSX
+    // Ini otomatis membaca "https://kaai-api.akadev.me"
+    const BASE_URL = axios.defaults.baseURL;
 
     const handleDownload = async (e) => {
         e.preventDefault();
@@ -21,10 +21,10 @@ const AllInDL = () => {
         setData(null);
         
         try {
-            // Toast loading unik
             toast.loading('Sedang mengintip server...', { id: 'dl-proc' });
             
-            const res = await axios.post(`${API_URL}/api/allindl`, { url });
+            // ✅ REQUEST API (Otomatis ikut domain main.jsx)
+            const res = await axios.post('/api/allindl', { url });
             
             if (res.data.status) {
                 setData(res.data);
@@ -34,7 +34,7 @@ const AllInDL = () => {
             }
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.msg || 'Server meledak atau URL salah', { id: 'dl-proc' });
+            toast.error(error.response?.data?.msg || 'Server error / URL tidak valid', { id: 'dl-proc' });
         } finally {
             setLoading(false);
         }
@@ -108,14 +108,15 @@ const AllInDL = () => {
                                             <Play className="fill-black" /> VIDEO
                                         </div>
                                         <div className="border-4 border-black bg-black">
+                                            {/* Gabungkan BASE_URL + path video dari backend */}
                                             <video 
-                                                src={`${API_URL}${data.media.video}`} 
+                                                src={`${BASE_URL}${data.media.video}`} 
                                                 controls 
                                                 className="w-full max-h-[500px]"
                                             />
                                         </div>
                                         <a 
-                                            href={`${API_URL}${data.media.video}`} 
+                                            href={`${BASE_URL}${data.media.video}`} 
                                             download 
                                             target="_blank"
                                             rel="noreferrer"
@@ -133,12 +134,12 @@ const AllInDL = () => {
                                             <Music className="fill-black" /> AUDIO
                                         </div>
                                         <audio 
-                                            src={`${API_URL}${data.media.audio}`} 
+                                            src={`${BASE_URL}${data.media.audio}`} 
                                             controls 
                                             className="w-full border-2 border-black rounded-none"
                                         />
                                         <a 
-                                            href={`${API_URL}${data.media.audio}`} 
+                                            href={`${BASE_URL}${data.media.audio}`} 
                                             download 
                                             target="_blank"
                                             rel="noreferrer"
@@ -156,19 +157,18 @@ const AllInDL = () => {
                                             <ImageIcon className="fill-black" /> IMAGES ({data.media.images.length})
                                         </div>
                                         
-                                        {/* Horizontal Scroll Container */}
                                         <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory">
                                             {data.media.images.map((img, idx) => (
                                                 <div key={idx} className="flex-none w-64 snap-center space-y-2">
                                                     <div className="border-4 border-black h-64 bg-gray-200">
                                                         <img 
-                                                            src={`${API_URL}${img}`} 
+                                                            src={`${BASE_URL}${img}`} 
                                                             alt={`Slide ${idx}`} 
                                                             className="w-full h-full object-cover"
                                                         />
                                                     </div>
                                                     <a 
-                                                        href={`${API_URL}${img}`} 
+                                                        href={`${BASE_URL}${img}`} 
                                                         download
                                                         target="_blank"
                                                         rel="noreferrer"
@@ -187,7 +187,6 @@ const AllInDL = () => {
                     </div>
                 )}
 
-                {/* TIPS / FOOTNOTE */}
                 <div className="bg-white border-2 border-black p-4 flex items-start gap-3 opacity-80">
                     <AlertTriangle className="flex-shrink-0" />
                     <p className="text-sm font-bold">
