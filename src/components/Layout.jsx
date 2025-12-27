@@ -53,6 +53,7 @@ const Layout = ({ children }) => {
                     {/* Desktop Menu */}
                     <div className="hidden md:flex gap-6 items-center">
                         <NavLink to="/" text="Home" />
+                        <NavLink to="/allindl" text="🔥 All-in-One" /> {/* <--- TAMBAH LINK INI */}
                         <NavLink to="/ytdl" text="YTDL" />
                         <NavLink to="/docs" text="API Docs" />
                     </div>
@@ -77,6 +78,7 @@ const Layout = ({ children }) => {
                             className="md:hidden overflow-hidden border-t-2 border-black mt-4 flex flex-col gap-3 pt-4 pb-2 bg-white"
                         >
                             <NavLink to="/" text="🏠 Home" />
+                            <NavLink to="/allindl" text="🔥 All-In-One DL" /> {/* <--- TAMBAH LINK INI JUGA */}
                             <NavLink to="/ytdl" text="📺 YouTube DL" />
                             <NavLink to="/docs" text="📜 Documentation" />
                         </motion.div>
