@@ -5,7 +5,8 @@ import Home from './pages/Home';
 import Ytdl from './pages/Ytdl';
 import AIChat from './pages/AIChat';
 import SSWeb from './pages/SSWeb';
-import Docs from './pages/Docs'; // Import Docs
+import Docs from './pages/Docs';
+import AllInDL from './pages/AllInDL'; // <--- IMPORT INI
 
 function App() {
   return (
@@ -38,8 +39,9 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/docs" element={<Docs />} /> {/* Route Baru */}
+        <Route path="/docs" element={<Docs />} />
         <Route path="/ytdl" element={<Ytdl />} />
+        <Route path="/allindl" element={<AllInDL />} /> {/* <--- ROUTE BARU */}
         <Route path="/ai/chat" element={<AIChat />} />
         <Route path="/ssweb" element={<SSWeb />} />
       </Routes>
