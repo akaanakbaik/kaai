@@ -6,7 +6,7 @@ import Ytdl from './pages/Ytdl';
 import AIChat from './pages/AIChat';
 import SSWeb from './pages/SSWeb';
 import Docs from './pages/Docs';
-import AllInDL from './pages/AllInDL'; // <--- PASTIKAN INI ADA
+import AllInDL from './pages/AllInDL';
 
 function App() {
   return (
