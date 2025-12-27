@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { NeoCard, NeoButton, NeoInput, NeoTextArea, PageWrapper } from '../components/NeoUI';
-import { Youtube, MessageSquare, Camera, Mail, BookOpen, Terminal, Heart, ArrowUpRight, Zap, Shield, Crown } from 'lucide-react';
+import { Youtube, MessageSquare, Camera, Mail, BookOpen, Terminal, Heart, ArrowUpRight, Zap, Shield, Crown, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -77,19 +77,38 @@ const Home = () => {
                         </NeoButton>
                     </Link>
                     <NeoButton variant="white" className="rounded-full px-4 h-8 text-[10px] text-gray-500 cursor-default">
-                        <Terminal size={12}/> V.15.2
+                        <Terminal size={12}/> V.15.3
                     </NeoButton>
                 </div>
             </div>
 
-            {/* MENU GRID (Single Column on Mobile) */}
+            {/* MENU GRID (Updated to 2 Columns for better symmetry with 4 items) */}
             <motion.div 
                 variants={container} initial="hidden" animate="show"
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 px-1"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 px-1 max-w-4xl mx-auto"
             >
+                {/* 1. ALL IN ONE (NEW - HIGHLIGHTED) */}
+                <Link to="/allindl" className="group">
+                    <motion.div variants={item}>
+                        <NeoCard className="bg-[#60A5FA] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="01. ALL DOWNLOADER">
+                            <Download size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
+                            <div className="flex items-center gap-4 py-2">
+                                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
+                                    <Download size={24} className="text-blue-700"/>
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-xl leading-none">ALL-IN-ONE</h3>
+                                    <p className="font-bold opacity-60 text-[10px]">TikTok, IG, FB, Twitter</p>
+                                </div>
+                            </div>
+                        </NeoCard>
+                    </motion.div>
+                </Link>
+
+                {/* 2. YOUTUBE */}
                 <Link to="/ytdl" className="group">
                     <motion.div variants={item}>
-                        <NeoCard className="bg-[#FFDC58] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="01. MEDIA">
+                        <NeoCard className="bg-[#FFDC58] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="02. MEDIA">
                             <Youtube size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
                             <div className="flex items-center gap-4 py-2">
                                 <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
@@ -104,9 +123,10 @@ const Home = () => {
                     </motion.div>
                 </Link>
 
+                {/* 3. AI CHAT */}
                 <Link to="/ai/chat" className="group">
                     <motion.div variants={item}>
-                        <NeoCard className="bg-[#A3E635] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="02. AI">
+                        <NeoCard className="bg-[#A3E635] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="03. AI">
                             <MessageSquare size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
                             <div className="flex items-center gap-4 py-2">
                                 <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
@@ -121,9 +141,10 @@ const Home = () => {
                     </motion.div>
                 </Link>
 
+                {/* 4. SSWEB */}
                 <Link to="/ssweb" className="group">
                     <motion.div variants={item}>
-                        <NeoCard className="bg-[#FF90E8] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="03. TOOLS">
+                        <NeoCard className="bg-[#FF90E8] group-hover:-translate-y-1 transition-transform relative overflow-hidden" title="04. TOOLS">
                             <Camera size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12"/>
                             <div className="flex items-center gap-4 py-2">
                                 <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
