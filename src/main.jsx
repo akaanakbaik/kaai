@@ -14,11 +14,14 @@ window.apiMain = axios.create({
   headers: { "Content-Type": "application/json" }
 });
 
-// API KHUSUS YTDL PYTHON (TUNNEL)
-// Pastikan ini sesuai dengan HOSTNAME di config.py backend kamu
+/**
+ * 🔗 KONEKSI KE BACKEND PYTHON
+ * Pastikan URL ini bisa dibuka di browser dan muncul pesan {"status": "online"}
+ */
 window.apiYtdl = axios.create({
   baseURL: "https://api-ytdlpy.akadev.me", 
-  headers: { "Content-Type": "application/json" }
+  headers: { "Content-Type": "application/json" },
+  timeout: 60000 // Tambah timeout jadi 60 detik (backend prosesnya agak lama)
 });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
