@@ -8,8 +8,26 @@ import { HelmetProvider } from 'react-helmet-async';
 
 inject();
 
-axios.defaults.baseURL = "https://kaai-api.akadev.me";
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+/**
+ * API LAMA (DEFAULT)
+ * Dipakai oleh halaman selain YTDL
+ */
+window.apiMain = axios.create({
+  baseURL: "https://kaai-api.akadev.me",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+/**
+ * API KHUSUS YTDL
+ */
+window.apiYtdl = axios.create({
+  baseURL: "https://api-ytdlpy.akadev.me",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
