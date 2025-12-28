@@ -1,44 +1,45 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI';
-import { Search, Download, Music, Video, ArrowLeft, Loader } from 'lucide-react';
+import { Search, Download, Music, Video, ArrowLeft, Loader, Play, Clock, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
 
 const Ytdl = () => {
   const [url, setUrl] = useState('');
-  const [type, setType] = useState('mp4');
+  const [type, setType] = useState('mp4'); // mp4 or mp3
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
 
   const handleProcess = async () => {
     if (!url) return toast.error('Link wajib diisi!');
-    if (!url.includes('youtu')) return toast.error('Bukan link YouTube!');
+    // Regex simple untuk validasi link youtube
+    if (!url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/)) {
+      return toast.error('Harus link YouTube yang valid!');
+    }
 
     setLoading(true);
     setData(null);
 
     try {
-      const res = await window.apiYtdl.post(
-        '/api/ytdl',
-        { url },
-        { timeout: 300000 }
-      );
+      // 1. Request Info ke Backend
+      // Backend akan return metadata + URL stream yang sudah di-proxy
+      const res = await window.apiYtdl.post('/api/ytdl/info', { url });
 
-      if (!res.data?.status) {
-        throw new Error(res.data?.msg || 'Gagal memproses video');
+      if (res.data?.status) {
+        setData({
+          ...res.data.metadata, // id, title, thumbnail, duration, views, url (proxied)
+          engine: res.data.engine
+        });
+        toast.success('Metadata berhasil dimuat!');
+      } else {
+        throw new Error(res.data?.msg || 'Gagal mengambil data');
       }
 
-      setData({
-        ...res.data.metadata,
-        engine: res.data.engine,
-        type
-      });
-
-      toast.success('Selesai!');
     } catch (err) {
-      toast.error(err.response?.data?.detail || err.message || 'Server Error');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Terjadi kesalahan pada server');
     } finally {
       setLoading(false);
     }
@@ -47,101 +48,151 @@ const Ytdl = () => {
   return (
     <PageWrapper>
       <Helmet>
-        <title>YouTube DL - KAAI</title>
+        <title>KAAI YTDL - Fast YouTube Downloader</title>
       </Helmet>
 
-      <div className="flex items-center justify-between mb-6">
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-8">
         <Link to="/">
-          <NeoButton variant="white" className="h-8 text-[10px]">
-            <ArrowLeft size={12} /> KEMBALI
+          <NeoButton variant="white" className="h-8 px-3 text-[10px] font-black tracking-widest">
+            <ArrowLeft size={12} className="mr-1" /> KEMBALI
           </NeoButton>
         </Link>
-
-        <h1 className="text-2xl font-black italic tracking-tighter">
-          YT<span className="text-red-600">DL</span>
+        <h1 className="text-3xl font-black italic tracking-tighter">
+          YT<span className="text-[#FF4A4A]">DL</span>
+          <span className="text-xs ml-1 not-italic font-medium bg-black text-white px-1 rounded">
+            v2.5
+          </span>
         </h1>
       </div>
 
-      <div className="max-w-xl mx-auto space-y-4">
-        <NeoCard className="bg-[#FFDC58]" title="CONVERTER">
-          <div className="space-y-3">
+      <div className="max-w-xl mx-auto space-y-6">
+        {/* INPUT CARD */}
+        <NeoCard className="bg-[#A3E635] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" title="LINK DOWNLOADER">
+          <div className="space-y-4">
             <NeoInput
-              placeholder="https://youtu.be/..."
+              placeholder="Tempel link YouTube di sini..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              className="text-sm font-medium"
             />
 
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'mp3', label: 'MP3 (AUDIO)', icon: <Music size={16} /> },
-                { id: 'mp4', label: 'MP4 (VIDEO)', icon: <Video size={16} /> }
-              ].map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setType(t.id)}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-md border-2 border-black transition-all
-                    ${type === t.id ? 'bg-black text-white' : 'bg-white hover:bg-gray-50'}
-                  `}
-                >
-                  {t.icon}
-                  <span className="text-xs font-bold">{t.label}</span>
-                </button>
-              ))}
+            {/* FORMAT SELECTOR */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setType('mp3')}
+                className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-black transition-all font-black text-sm
+                  ${type === 'mp3' ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.5)]' : 'bg-white hover:translate-y-[-2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'}
+                `}
+              >
+                <Music size={16} /> AUDIO (MP3)
+              </button>
+              <button
+                onClick={() => setType('mp4')}
+                className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-black transition-all font-black text-sm
+                  ${type === 'mp4' ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.5)]' : 'bg-white hover:translate-y-[-2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'}
+                `}
+              >
+                <Video size={16} /> VIDEO (MP4)
+              </button>
             </div>
 
             <NeoButton
               onClick={handleProcess}
               disabled={loading}
-              className="w-full h-12 text-sm"
+              className="w-full h-12 text-sm font-black tracking-wide"
               variant="dark"
             >
-              {loading ? <Loader className="animate-spin" /> : <><Search size={16} /> PROSES</>}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="animate-spin" size={16} /> MEMPROSES...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Search size={16} /> PROSES SEKARANG
+                </div>
+              )}
             </NeoButton>
           </div>
         </NeoCard>
 
+        {/* RESULT CARD */}
         <AnimatePresence>
           {data && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <NeoCard title="HASIL" className="bg-white">
-                <div className="flex gap-4 mb-4">
-                  <img
-                    src={data.thumbnail}
-                    className="w-24 h-24 object-cover rounded border-2 border-black bg-gray-200"
-                    alt="Thumbnail"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-sm leading-tight line-clamp-2 mb-1">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <NeoCard title="HASIL PENCARIAN" className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                {/* INFO HEADER */}
+                <div className="flex gap-4 mb-4 items-start">
+                  <div className="relative shrink-0">
+                    <img
+                      src={data.thumbnail}
+                      className="w-28 aspect-video object-cover rounded border-2 border-black"
+                      alt="Thumbnail"
+                    />
+                    <div className="absolute -bottom-2 -right-2 bg-[#FF4A4A] text-white text-[10px] font-bold px-1 border border-black">
+                      {data.duration}
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-black text-sm leading-tight line-clamp-2">
                       {data.title}
                     </h3>
-                    <p className="text-[10px] font-bold text-gray-500 uppercase">
-                      {data.author}
-                    </p>
-                    <p className="text-[10px] mt-1">
-                      Engine: <b>{data.engine}</b>
-                    </p>
+                    <div className="flex flex-wrap gap-2 text-[10px] font-bold text-gray-600">
+                      <span className="flex items-center gap-1 bg-gray-100 px-1 rounded border border-black">
+                        <Clock size={10} /> {data.duration}
+                      </span>
+                      <span className="flex items-center gap-1 bg-gray-100 px-1 rounded border border-black">
+                         {data.author}
+                      </span>
+                      {data.views && (
+                        <span className="flex items-center gap-1 bg-gray-100 px-1 rounded border border-black">
+                           <Eye size={10} /> {Number(data.views).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="pt-1">
+                       <span className="text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded font-mono">
+                         Engine: {data.engine}
+                       </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* PREVIEW LANGSUNG */}
-                <div className="mb-4 w-full bg-black rounded-lg overflow-hidden border-2 border-black">
+                {/* PREVIEW PLAYER */}
+                <div className="mb-4 w-full bg-black rounded border-2 border-black overflow-hidden relative group">
                   {type === 'mp3' ? (
-                    <audio controls className="w-full h-10 mt-1">
-                      <source src={data.url} />
-                    </audio>
+                    <div className="h-14 flex items-center justify-center bg-[#1a1a1a]">
+                        <audio controls className="w-[95%] h-8">
+                          {/* Backend mengirim URL yang sudah diproxy lewat /api/stream */}
+                          <source src={data.url} type="audio/mp4" />
+                          Browser Anda tidak mendukung audio tag.
+                        </audio>
+                    </div>
                   ) : (
-                    <video controls className="w-full aspect-video bg-black">
-                      <source src={data.url} />
+                    <video controls className="w-full aspect-video bg-black" poster={data.thumbnail}>
+                      {/* Backend mengirim URL yang sudah diproxy lewat /api/stream */}
+                      <source src={data.url} type="video/mp4" />
+                      Browser Anda tidak mendukung tag video.
                     </video>
                   )}
                 </div>
 
-                {/* DOWNLOAD LANGSUNG */}
-                <a href={data.url} target="_blank" rel="noreferrer">
-                  <NeoButton variant="primary" className="w-full h-12 text-sm">
-                    <Download size={18} /> DOWNLOAD FILE {type.toUpperCase()}
-                  </NeoButton>
-                </a>
+                {/* ACTION BUTTONS */}
+                <div className="grid grid-cols-1 gap-2">
+                  <a href={data.url} target="_blank" rel="noreferrer" download={`${data.title}.${type}`}>
+                    <NeoButton variant="primary" className="w-full h-12 text-sm font-black flex items-center justify-center gap-2">
+                      <Download size={18} /> DOWNLOAD {type.toUpperCase()}
+                    </NeoButton>
+                  </a>
+                  <p className="text-[10px] text-center text-gray-500 font-medium">
+                    *Jika download tidak mulai otomatis, klik titik tiga di player lalu pilih 'Download'.
+                  </p>
+                </div>
               </NeoCard>
             </motion.div>
           )}
