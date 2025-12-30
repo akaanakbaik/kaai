@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI'
+import React, { useState } from 'react';
+import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI';
 import {
   Search,
   Download,
@@ -10,83 +9,61 @@ import {
   Loader,
   CheckCircle,
   AlertTriangle
-} from 'lucide-react'
-import { Link } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import { Helmet } from 'react-helmet-async'
-
-const STAGES = [
-  'Validasi URL',
-  'Menyiapkan engine',
-  'Menjalankan proses utama',
-  'Menjalankan fallback',
-  'Menyiapkan output',
-  'Selesai'
-]
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Ytdl = () => {
-  const [url, setUrl] = useState('')
-  const [type, setType] = useState('mp4')
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState(null)
-  const [stage, setStage] = useState(0)
-
-  const reset = () => {
-    setData(null)
-    setStage(0)
-  }
+  const [url, setUrl] = useState('');
+  const [type, setType] = useState('mp4');
+  const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState('idle');
+  const [data, setData] = useState(null);
 
   const handleProcess = async () => {
     if (!url) {
-      toast.error('Link wajib diisi')
-      return
+      toast.error('Link wajib diisi');
+      return;
     }
 
-    reset()
-    setLoading(true)
+    setLoading(true);
+    setStage('request');
+    setData(null);
 
     try {
-      setStage(0)
-      await new Promise(r => setTimeout(r, 300))
-
-      setStage(1)
-      await new Promise(r => setTimeout(r, 300))
-
       const endpoint =
         type === 'mp3'
           ? '/api/ytdl/mp3'
           : type === 'mp4'
           ? '/api/ytdl/mp4'
-          : '/api/ytdl/info'
+          : '/api/ytdl/info';
 
-      setStage(2)
+      setStage('processing');
 
-      const res = await window.apiYtdl.post(endpoint, { url })
+      const res = await window.apiYtdl.post(endpoint, { url });
 
-      if (!res.data?.status) {
-        throw new Error(res.data?.msg || 'Gagal mengambil data')
+      if (!res.data || !res.data.status) {
+        throw new Error(res.data?.msg || 'Gagal memproses video');
       }
 
-      setStage(4)
-      await new Promise(r => setTimeout(r, 300))
-
-      setData(res.data.metadata)
-      setStage(5)
-
-      toast.success('Berhasil diproses')
+      setData(res.data.metadata);
+      setStage('done');
+      toast.success('Berhasil diproses');
 
     } catch (err) {
-      console.error(err)
+      console.error(err);
+      setStage('error');
       toast.error(
         err.response?.data?.msg ||
         err.message ||
         'Terjadi kesalahan pada server'
-      )
-      setStage(0)
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <PageWrapper>
@@ -100,140 +77,143 @@ const Ytdl = () => {
             <ArrowLeft size={12} /> KEMBALI
           </NeoButton>
         </Link>
-        <h1 className="text-2xl font-black italic tracking-tighter">
+        <h1 className="text-2xl font-black italic tracking-tight">
           YT<span className="text-red-600">DL</span>
         </h1>
       </div>
 
-      <div className="max-w-xl mx-auto space-y-5">
-        <NeoCard title="KONVERTER" className="bg-[#FFDC58]">
-          <div className="space-y-4">
-            <NeoInput
-              placeholder="https://youtube.com/..."
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-            />
+      <NeoCard
+        title="YOUTUBE DOWNLOADER"
+        className="bg-[#FFE066] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+      >
+        <div className="space-y-4">
+          <NeoInput
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://youtube.com/..."
+            disabled={loading}
+          />
 
-            <div className="grid grid-cols-2 gap-2">
-              <NeoButton
-                onClick={() => setType('mp3')}
-                variant={type === 'mp3' ? 'dark' : 'white'}
-              >
-                <Music size={16} /> MP3
-              </NeoButton>
-
-              <NeoButton
-                onClick={() => setType('mp4')}
-                variant={type === 'mp4' ? 'dark' : 'white'}
-              >
-                <Video size={16} /> MP4
-              </NeoButton>
-            </div>
-
+          <div className="grid grid-cols-2 gap-2">
             <NeoButton
-              onClick={handleProcess}
-              disabled={loading}
-              className="w-full h-12 text-sm"
-              variant="dark"
+              onClick={() => setType('mp3')}
+              variant={type === 'mp3' ? 'dark' : 'white'}
             >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader size={16} className="animate-spin" />
-                  MEMPROSES
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Search size={16} />
-                  PROSES
-                </span>
-              )}
+              <Music size={16} /> MP3
+            </NeoButton>
+            <NeoButton
+              onClick={() => setType('mp4')}
+              variant={type === 'mp4' ? 'dark' : 'white'}
+            >
+              <Video size={16} /> MP4
             </NeoButton>
           </div>
-        </NeoCard>
 
-        <AnimatePresence>
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+          <NeoButton
+            onClick={handleProcess}
+            disabled={loading}
+            className="w-full h-12 text-sm"
+            variant="dark"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader className="animate-spin" size={16} />
+                MEMPROSES...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Search size={16} />
+                PROSES
+              </div>
+            )}
+          </NeoButton>
+
+          <AnimatePresence>
+            {stage === 'processing' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-xs font-bold text-gray-700 flex items-center gap-2"
+              >
+                <Loader className="animate-spin" size={14} />
+                Engine sedang bekerja (dual-engine aktif)...
+              </motion.div>
+            )}
+
+            {stage === 'done' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs font-bold text-green-700 flex items-center gap-2"
+              >
+                <CheckCircle size={14} />
+                Proses selesai
+              </motion.div>
+            )}
+
+            {stage === 'error' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs font-bold text-red-700 flex items-center gap-2"
+              >
+                <AlertTriangle size={14} />
+                Gagal memproses video
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </NeoCard>
+
+      <AnimatePresence>
+        {data && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6"
+          >
+            <NeoCard
+              title="HASIL"
+              className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
             >
-              <NeoCard title="PROGRESS" className="bg-white">
-                <ul className="space-y-2 text-sm font-bold">
-                  {STAGES.map((s, i) => (
-                    <li
-                      key={i}
-                      className={`flex items-center gap-2 ${
-                        stage === i
-                          ? 'text-black'
-                          : stage > i
-                          ? 'text-green-600'
-                          : 'text-gray-400'
-                      }`}
-                    >
-                      {stage > i ? (
-                        <CheckCircle size={14} />
-                      ) : stage === i ? (
-                        <Loader size={14} className="animate-spin" />
-                      ) : (
-                        <AlertTriangle size={14} />
-                      )}
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              </NeoCard>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <img
+                src={data.thumbnail}
+                alt="thumbnail"
+                className="w-full rounded border-2 border-black mb-3"
+              />
 
-        <AnimatePresence>
-          {data && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <NeoCard title="HASIL">
-                <img
-                  src={data.thumbnail}
-                  alt="thumbnail"
-                  className="w-full rounded border-2 border-black"
-                />
+              <h3 className="font-black text-sm mb-1">
+                {data.title}
+              </h3>
 
-                <h3 className="mt-2 font-black text-sm">
-                  {data.title}
-                </h3>
+              {type === 'mp3' ? (
+                <audio controls className="w-full mt-2">
+                  <source src={data.url} />
+                </audio>
+              ) : (
+                <video controls className="w-full mt-2">
+                  <source src={data.url} />
+                </video>
+              )}
 
-                <div className="mt-3 bg-black rounded overflow-hidden">
-                  {type === 'mp3' ? (
-                    <audio controls className="w-full">
-                      <source src={data.url} />
-                    </audio>
-                  ) : (
-                    <video controls className="w-full">
-                      <source src={data.url} />
-                    </video>
-                  )}
-                </div>
-
-                <a
-                  href={data.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block mt-3"
-                >
-                  <NeoButton variant="primary" className="w-full">
-                    <Download size={16} /> DOWNLOAD
-                  </NeoButton>
-                </a>
-              </NeoCard>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <a
+                href={data.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block mt-3"
+              >
+                <NeoButton variant="primary" className="w-full h-11">
+                  <Download size={16} />
+                  DOWNLOAD
+                </NeoButton>
+              </a>
+            </NeoCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageWrapper>
-  )
-}
+  );
+};
 
-export default Ytdl
+export default Ytdl;
