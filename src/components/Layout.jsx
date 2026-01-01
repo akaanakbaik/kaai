@@ -67,12 +67,18 @@ const Layout = ({ children }) => {
                     </div>
                 </div>
                 <div className="p-8 text-center bg-[#1a1a1a] text-white">
-                    <p className="font-bold flex items-center justify-center gap-2 mb-2">Dibuat dengan <Heart size={16} className="text-red-500 fill-red-500 animate-pulse"/> dan Code</p>
-                    <p className="text-sm opacity-70 tracking-widest uppercase">Crafted by Aka 🇮🇩 🇵🇸</p>
-                </div>
-            </footer>
-        </div>
-    );
-};
+  <p className="font-semibold flex items-center justify-center gap-2 mb-2 text-sm">
+    Dibuat dengan
+    <Heart
+      size={16}
+      className="text-red-500 fill-red-500 animate-pulse"
+    />
+    dan Code
+  </p>
+
+  <p className="text-xs opacity-70 tracking-wider uppercase">
+    © 2026 • Crafted by Aka • Indonesia 🇮🇩 | Free Palestine 🇵🇸
+  </p>
+</div>
 
 export default Layout;
