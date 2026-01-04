@@ -3,7 +3,7 @@ import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI'
 import { 
   Search, Download, Music, Video, ArrowLeft, Loader, 
   AlertTriangle, Clipboard, Cpu, Clock, Server, 
-  Terminal, Wifi, Zap, CheckCircle, Radio, Play
+  Terminal, Wifi, Zap, CheckCircle, Radio, Play, Activity 
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
