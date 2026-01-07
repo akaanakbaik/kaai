@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Heart, ExternalLink } from 'lucide-react';
+import { Menu, X, Heart, ExternalLink, Command } from 'lucide-react';
 
 const LOGO_URL = 'https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg';
 
@@ -10,7 +10,7 @@ const NavLink = memo(({ to, text, onClick, active }) => (
     <motion.div
       whileHover={{ scale: 1.05, rotate: -1 }}
       whileTap={{ scale: 0.95 }}
-      className={`border-2 border-black px-4 py-2 font-black uppercase tracking-wider text-sm transition-all duration-200 ${
+      className={`border-2 border-black px-4 py-2 font-black uppercase tracking-wider text-sm transition-all duration-200 rounded-md ${
         active 
           ? 'bg-[#A3E635] text-black shadow-[3px_3px_0px_0px_black] translate-x-[-1px] translate-y-[-1px]' 
           : 'bg-white text-gray-800 hover:bg-gray-50'
@@ -32,13 +32,11 @@ const Layout = ({ children }) => {
   const displayYear = currentYear > 2025 ? `2025 - ${currentYear}` : '2025';
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F3F4F6] text-black overflow-x-hidden selection:bg-[#FF90E8] selection:text-black">
+    <div className="flex min-h-screen flex-col bg-[#F3F4F6] text-black overflow-x-hidden font-sans selection:bg-[#FF90E8] selection:text-black">
       
-      {/* NAVBAR */}
       <nav className="sticky top-0 z-50 border-b-3 border-black bg-white/90 backdrop-blur-md px-4 py-3 md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           
-          {/* LOGO */}
           <Link to="/" className="flex items-center gap-3 group">
             <motion.div 
               whileHover={{ rotate: 15 }}
@@ -52,30 +50,30 @@ const Layout = ({ children }) => {
             </motion.div>
             
             <div className="flex flex-col">
-              <span className="bg-black px-2 py-0.5 text-xl font-black italic text-white -skew-x-12 transform group-hover:scale-105 transition-transform origin-left">
+              <span className="bg-black px-2 py-0.5 text-xl font-black italic text-white -skew-x-12 transform group-hover:scale-105 transition-transform origin-left rounded-sm">
                 KAAI.
               </span>
-              <span className="text-[10px] font-bold tracking-widest mt-0.5 pl-1">
-                WEB DOWNLOADER
+              <span className="text-[10px] font-bold tracking-widest mt-0.5 pl-1 text-gray-600 flex items-center gap-1">
+                <Command size={10} /> WEB TOOLKIT
               </span>
             </div>
           </Link>
 
-          {/* DESKTOP MENU */}
           <div className="hidden md:flex gap-4 items-center">
             <NavLink to="/" text="Home" active={pathname === '/'} />
-            <NavLink to="/ytdl" text="YTDL Pro" active={pathname === '/ytdl'} />
+            <NavLink to="/ytdl" text="YTDL" active={pathname === '/ytdl'} />
+            <NavLink to="/allindl" text="All-In-One" active={pathname === '/allindl'} />
+            <NavLink to="/docs" text="API" active={pathname === '/docs'} />
             <a href="https://github.com/akaanakbaik" target="_blank" rel="noopener noreferrer">
                <motion.button
                  whileHover={{ y: -2 }}
-                 className="flex items-center gap-2 px-4 py-2 font-bold text-sm hover:underline decoration-2 underline-offset-4"
+                 className="flex items-center gap-2 px-4 py-2 font-bold text-sm hover:text-blue-600 transition-colors"
                >
                  GitHub <ExternalLink size={14} />
                </motion.button>
             </a>
           </div>
 
-          {/* MOBILE MENU BUTTON */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={toggleMenu}
@@ -85,7 +83,6 @@ const Layout = ({ children }) => {
           </motion.button>
         </div>
 
-        {/* MOBILE MENU DROPDOWN */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -96,6 +93,8 @@ const Layout = ({ children }) => {
             >
               <NavLink to="/" text="🏠 Home" onClick={closeMenu} />
               <NavLink to="/ytdl" text="📺 YouTube DL" onClick={closeMenu} />
+              <NavLink to="/allindl" text="🔥 All In One" onClick={closeMenu} />
+              <NavLink to="/docs" text="🔌 API Docs" onClick={closeMenu} />
               <div className="border-t-2 border-dashed border-gray-300 my-2" />
               <p className="text-center text-xs font-bold text-gray-400">© KAAI PROJECTS</p>
             </motion.div>
@@ -103,9 +102,7 @@ const Layout = ({ children }) => {
         </AnimatePresence>
       </nav>
 
-      {/* MAIN CONTENT */}
       <main className="relative mx-auto w-full max-w-7xl flex-grow px-4 py-8 md:py-12">
-        {/* Background Pattern */}
         <div 
           className="pointer-events-none absolute inset-0 opacity-[0.03]" 
           style={{ 
@@ -118,7 +115,6 @@ const Layout = ({ children }) => {
         </div>
       </main>
 
-      {/* FOOTER */}
       <footer className="border-t-3 border-black bg-[#111] text-white text-center py-10 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#A3E635]"></div>
         
