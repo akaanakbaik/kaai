@@ -3,14 +3,14 @@ import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI'
 import { 
   Video, Music, ArrowLeft, Loader, Clipboard, 
   Terminal, Zap, CheckCircle, Clock, Cpu, 
-  Download, ChevronDown, Activity, Play, Pause, AlertTriangle
+  Download, ChevronDown, Activity, Play, Pause
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Helmet } from 'react-helmet-async'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// --- CUSTOM AUDIO PLAYER (Agar bisa geser durasi) ---
+// --- CUSTOM AUDIO PLAYER ---
 const CustomAudioPlayer = ({ src, thumbnail }) => {
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -152,7 +152,10 @@ const Ytdl = () => {
 
     try {
       const backendType = type === 'mp3' ? 'audio' : 'video'
-      const res = await window.apiYtdl.post('/api/ytdl/info', 
+      
+      // --- PERBAIKAN DI SINI: MENGGUNAKAN ENDPOINT V1 BARU ---
+      // Endpoint lama: /api/ytdl/info -> Endpoint baru: /api/v1/ytdl/process
+      const res = await window.apiYtdl.post('/api/v1/ytdl/process', 
         { url, type: backendType }, 
         { timeout: 600000 }
       )
@@ -178,8 +181,6 @@ const Ytdl = () => {
       <Helmet><title>KAAI YTDL</title></Helmet>
       
       <div className="w-full max-w-5xl mx-auto">
-        
-        {/* HEADER */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-4">
             <Link to="/">
@@ -201,7 +202,6 @@ const Ytdl = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* CONFIGURATION */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -259,7 +259,6 @@ const Ytdl = () => {
             </NeoCard>
           </motion.div>
 
-          {/* LOGS */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -291,7 +290,6 @@ const Ytdl = () => {
           </motion.div>
         </div>
 
-        {/* RESULT SECTION */}
         <div ref={resultRef}>
           <AnimatePresence>
             {data && stage === 'done' && (
@@ -306,7 +304,6 @@ const Ytdl = () => {
                 </div>
 
                 <NeoCard className="bg-white p-0 overflow-hidden">
-                  {/* HEADER INFO */}
                   <div className="bg-black text-white p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-2 border-black">
                     <h3 className="font-black text-lg md:text-xl line-clamp-1 flex-1">{data.title}</h3>
                     <div className="flex gap-2">
@@ -320,7 +317,6 @@ const Ytdl = () => {
                   </div>
 
                   <div className="p-6 md:p-8 grid md:grid-cols-2 gap-8">
-                    {/* MEDIA PREVIEW */}
                     <div className="bg-gray-100 rounded-lg p-4 border-2 border-dashed border-gray-300 flex flex-col justify-center">
                        {type === 'mp3' ? (
                          <CustomAudioPlayer src={data.preview_url} thumbnail={data.thumbnail} />
@@ -330,13 +326,12 @@ const Ytdl = () => {
                               src={data.preview_url} 
                               controls 
                               className="w-full aspect-video" 
-                              poster={data.thumbnail} // Thumbnail hanya jadi poster, hilang saat play
+                              poster={data.thumbnail}
                             />
                          </div>
                        )}
                     </div>
 
-                    {/* DETAILS & DOWNLOAD */}
                     <div className="flex flex-col justify-between gap-6">
                       <div className="space-y-4">
                         <div className="bg-[#E0F2FE] border-2 border-[#7DD3FC] p-3 rounded-lg">
@@ -362,7 +357,6 @@ const Ytdl = () => {
                     </div>
                   </div>
                   
-                  {/* FOOTER STATS */}
                   {data.stats && (
                     <div className="bg-gray-100 border-t-2 border-black p-2 text-center">
                       <p className="text-[10px] font-mono font-bold text-gray-500">
@@ -375,29 +369,17 @@ const Ytdl = () => {
             )}
           </AnimatePresence>
         </div>
-
       </div>
 
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #111;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #22c55e;
-          border-radius: 4px;
-        }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 4px; }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
       `}</style>
     </PageWrapper>
   )
 }
+
 export default Ytdl
