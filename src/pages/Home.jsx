@@ -1,140 +1,133 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import {
-  NeoCard,
-  NeoButton,
-  NeoInput,
-  NeoTextArea,
-  PageWrapper,
-} from '../components/NeoUI';
-import {
-  Youtube,
-  MessageSquare,
-  Camera,
-  BookOpen,
-  Terminal,
-  Download,
-  Zap,
-} from 'lucide-react';
+import { NeoCard, NeoButton, NeoInput, NeoTextArea, PageWrapper } from '../components/NeoUI';
+import { Youtube, MessageSquare, Camera, BookOpen, Terminal, Download, Zap, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const containerVariants = {
-  show: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
+  show: { transition: { staggerChildren: 0.05 } }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, scale: 0.9 },
+  show: { opacity: 1, scale: 1 }
 };
 
-const LOGO_URL =
-  'https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg';
+const LOGO_URL = 'https://raw.githubusercontent.com/akaanakbaik/belajar-frontand-dan-backend-terpisah/main/media/logo.jpg';
+const EGG_IMG = 'https://raw.githubusercontent.com/akaanakbaik/my-cdn/main/wujud_asli.jpg';
+const EGG_AUDIO = 'https://raw.githubusercontent.com/akaanakbaik/my-cdn/main/audio.mp3';
 
 const Home = () => {
-  const [contact, setContact] = useState({
-    name: '',
-    title: '',
-    message: '',
-  });
-
+  const [contact, setContact] = useState({ name: '', title: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  
+  const audioRef = useRef(new Audio(EGG_AUDIO));
 
   const sendContact = useCallback(async () => {
     if (!contact.name || !contact.message) {
-      toast.error('Data belum lengkap!');
+      toast.error('Data belum lengkap');
       return;
     }
     setLoading(true);
     try {
-      // Simulasi kirim
       await new Promise(r => setTimeout(r, 1000));
       toast.success('Pesan terkirim!');
       setContact({ name: '', title: '', message: '' });
     } catch {
-      toast.error('Gagal mengirim pesan.');
+      toast.error('Gagal mengirim');
     } finally {
       setLoading(false);
     }
   }, [contact]);
 
   const handleEasterEgg = useCallback(() => {
+    if (isLocked) return;
+
     setClickCount(prev => {
       const next = prev + 1;
+      
       if (next === 5) {
-        toast('🎉 DEV MODE UNLOCKED!', {
-          icon: '🧑‍💻',
-          style: { background: '#000', color: '#fff' },
-        });
-      }
-      if (next === 10) {
-        toast('🇵🇸 FREE PALESTINE!', {
-          icon: '❤️',
-          duration: 4000,
-        });
-        return 0;
+        setIsLocked(true);
+        audioRef.current.volume = 1.0;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+        
+        setTimeout(() => {
+          setIsLocked(false);
+          setClickCount(0);
+        }, 3200); 
+        return 5;
       }
       return next;
     });
-  }, []);
+  }, [isLocked]);
 
   return (
     <PageWrapper>
-      <Helmet>
-        <title>KAAI - Utilities</title>
-      </Helmet>
+      <Helmet><title>KAAI - Utilities</title></Helmet>
 
-      <div className="flex flex-col items-center justify-center pt-8 pb-12 text-center space-y-6">
+      <AnimatePresence>
+        {isLocked && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center cursor-not-allowed"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0, transition: { duration: 1.2 } }}
+              transition={{ type: "spring", bounce: 0.5 }}
+              className="relative"
+            >
+              <img 
+                src={EGG_IMG} 
+                alt="Secret" 
+                className="w-64 md:w-80 rounded-2xl border-4 border-white shadow-[0_0_50px_rgba(255,255,255,0.5)]"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col items-center justify-center pt-4 pb-8 text-center space-y-4">
         <motion.div
-          whileTap={{ rotate: 360, scale: 1.1 }}
-          transition={{ duration: 0.5 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleEasterEgg}
-          className="relative group cursor-pointer"
+          className="relative group cursor-pointer select-none"
         >
-          <div className="absolute inset-0 bg-black rounded-full translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all" />
+          <div className="absolute inset-0 bg-black rounded-full translate-x-1 translate-y-1 transition-transform group-hover:translate-x-0 group-hover:translate-y-0" />
           <img
             src={LOGO_URL}
-            alt="KAAI Logo"
-            className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-black z-10 bg-white object-cover"
+            alt="Logo"
+            className="relative w-20 h-20 md:w-24 md:h-24 rounded-full border-3 border-black z-10 bg-white object-cover"
           />
-          {clickCount > 0 && clickCount < 5 && (
-            <div className="absolute -top-2 -right-4 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-black animate-bounce border-2 border-black">
-              x{clickCount}
-            </div>
-          )}
         </motion.div>
 
         <div>
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none select-none text-black">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-none text-black">
             KAAI
           </h1>
-          <p className="text-sm md:text-base font-bold text-gray-500 mt-2 bg-white px-3 py-1 rounded-full border-2 border-gray-200 inline-block">
+          <p className="text-[10px] md:text-xs font-bold text-gray-500 mt-1 bg-white px-2 py-0.5 rounded border border-gray-200 inline-block">
             SIMPLE • FAST • SECURE
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 mt-4">
+        <div className="flex gap-2">
           <Link to="/docs">
-            <NeoButton
-              variant="dark"
-              className="rounded-xl px-6 h-10 text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
-            >
-              <BookOpen size={14} /> DOCUMENTATION
+            <NeoButton variant="dark" className="h-8 text-[10px] rounded-lg px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
+              <BookOpen size={12} /> DOCS
             </NeoButton>
           </Link>
-
-          <NeoButton
-            variant="white"
-            className="rounded-xl px-6 h-10 text-xs text-gray-600 cursor-default border-gray-300"
-          >
-            <Terminal size={14} /> V.15.5 STABLE
+          <NeoButton variant="white" className="h-8 text-[10px] rounded-lg px-4 text-gray-500 cursor-default border-gray-300">
+            <Terminal size={12} /> V.15.5
           </NeoButton>
         </div>
       </div>
@@ -143,162 +136,102 @@ const Home = () => {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16 px-2 max-w-5xl mx-auto"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 px-1 max-w-4xl mx-auto"
       >
-        <Link to="/allindl" className="group">
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
-            <NeoCard
-              title="01. UNIVERSAL DOWNLOADER"
-              className="bg-[#60A5FA] relative overflow-hidden h-full border-3"
-            >
-              <Download
-                size={100}
-                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
-              />
-              <div className="flex items-center gap-5 py-4 relative z-10">
-                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
-                  <Zap size={28} className="text-blue-700" />
-                </div>
-                <div>
-                  <h3 className="font-black text-2xl leading-none mb-1">
-                    ALL-IN-ONE
-                  </h3>
-                  <p className="font-bold text-black/60 text-xs">
-                    TikTok, Instagram, Facebook, Twitter
-                  </p>
-                </div>
+        <Link to="/allindl" className="group col-span-1">
+          <motion.div variants={itemVariants} whileHover={{ y: -3 }}>
+            <NeoCard className="bg-[#60A5FA] h-28 md:h-32 flex flex-col items-center justify-center relative overflow-hidden border-2 p-2">
+              <Download size={60} className="absolute -bottom-4 -right-4 opacity-20 rotate-12 text-black" />
+              <div className="bg-white p-1.5 rounded border-2 border-black shadow-sm mb-2 z-10">
+                <Zap size={18} className="text-blue-600" />
               </div>
+              <h3 className="font-black text-sm md:text-base leading-none z-10">ALL-IN-ONE</h3>
+              <p className="text-[8px] md:text-[9px] font-bold opacity-60 z-10">Universal</p>
             </NeoCard>
           </motion.div>
         </Link>
 
-        <Link to="/ytdl" className="group">
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
-            <NeoCard
-              title="02. MEDIA CONVERTER"
-              className="bg-[#FFDC58] relative overflow-hidden h-full border-3"
-            >
-              <Youtube
-                size={100}
-                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
-              />
-              <div className="flex items-center gap-5 py-4 relative z-10">
-                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
-                  <Youtube size={28} className="text-red-600" />
-                </div>
-                <div>
-                  <h3 className="font-black text-2xl leading-none mb-1">
-                    YOUTUBE DL
-                  </h3>
-                  <p className="font-bold text-black/60 text-xs">
-                    High Quality Video & Audio
-                  </p>
-                </div>
+        <Link to="/ytdl" className="group col-span-1">
+          <motion.div variants={itemVariants} whileHover={{ y: -3 }}>
+            <NeoCard className="bg-[#FFDC58] h-28 md:h-32 flex flex-col items-center justify-center relative overflow-hidden border-2 p-2">
+              <Youtube size={60} className="absolute -bottom-4 -right-4 opacity-20 rotate-12 text-black" />
+              <div className="bg-white p-1.5 rounded border-2 border-black shadow-sm mb-2 z-10">
+                <Youtube size={18} className="text-red-600" />
               </div>
+              <h3 className="font-black text-sm md:text-base leading-none z-10">YOUTUBE</h3>
+              <p className="text-[8px] md:text-[9px] font-bold opacity-60 z-10">Video & Audio</p>
             </NeoCard>
           </motion.div>
         </Link>
 
-        <Link to="/ai/chat" className="group">
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
-            <NeoCard
-              title="03. ARTIFICIAL INTELLIGENCE"
-              className="bg-[#A3E635] relative overflow-hidden h-full border-3"
-            >
-              <MessageSquare
-                size={100}
-                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
-              />
-              <div className="flex items-center gap-5 py-4 relative z-10">
-                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
-                  <MessageSquare size={28} className="text-green-700" />
-                </div>
-                <div>
-                  <h3 className="font-black text-2xl leading-none mb-1">
-                    KAAI CHAT
-                  </h3>
-                  <p className="font-bold text-black/60 text-xs">
-                    Smart Assistant Powered by AI
-                  </p>
-                </div>
+        <Link to="/ai/chat" className="group col-span-1">
+          <motion.div variants={itemVariants} whileHover={{ y: -3 }}>
+            <NeoCard className="bg-[#A3E635] h-28 md:h-32 flex flex-col items-center justify-center relative overflow-hidden border-2 p-2">
+              <MessageSquare size={60} className="absolute -bottom-4 -right-4 opacity-20 rotate-12 text-black" />
+              <div className="bg-white p-1.5 rounded border-2 border-black shadow-sm mb-2 z-10">
+                <MessageSquare size={18} className="text-green-700" />
               </div>
+              <h3 className="font-black text-sm md:text-base leading-none z-10">AI CHAT</h3>
+              <p className="text-[8px] md:text-[9px] font-bold opacity-60 z-10">Assistant</p>
             </NeoCard>
           </motion.div>
         </Link>
 
-        <Link to="/ssweb" className="group">
-          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
-            <NeoCard
-              title="04. UTILITIES"
-              className="bg-[#FF90E8] relative overflow-hidden h-full border-3"
-            >
-              <Camera
-                size={100}
-                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
-              />
-              <div className="flex items-center gap-5 py-4 relative z-10">
-                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
-                  <Camera size={28} className="text-purple-700" />
-                </div>
-                <div>
-                  <h3 className="font-black text-2xl leading-none mb-1">
-                    SSWEB PRO
-                  </h3>
-                  <p className="font-bold text-black/60 text-xs">
-                    Full Page Website Screenshot
-                  </p>
-                </div>
+        <Link to="/ssweb" className="group col-span-1">
+          <motion.div variants={itemVariants} whileHover={{ y: -3 }}>
+            <NeoCard className="bg-[#FF90E8] h-28 md:h-32 flex flex-col items-center justify-center relative overflow-hidden border-2 p-2">
+              <Camera size={60} className="absolute -bottom-4 -right-4 opacity-20 rotate-12 text-black" />
+              <div className="bg-white p-1.5 rounded border-2 border-black shadow-sm mb-2 z-10">
+                <Camera size={18} className="text-purple-700" />
               </div>
+              <h3 className="font-black text-sm md:text-base leading-none z-10">SSWEB</h3>
+              <p className="text-[8px] md:text-[9px] font-bold opacity-60 z-10">Screenshot</p>
             </NeoCard>
           </motion.div>
         </Link>
       </motion.div>
 
-      <div className="max-w-lg mx-auto mb-16">
-        <NeoCard title="CONTACT SUPPORT" className="bg-white border-3">
-          <div className="flex flex-col gap-3 p-2">
-            <div className="flex gap-3">
+      <div className="max-w-sm mx-auto mb-8 px-2">
+        <NeoCard title="CONTACT" className="bg-white border-2">
+          <div className="space-y-2 p-1">
+            <div className="flex gap-2">
               <NeoInput
                 placeholder="Name"
                 value={contact.name}
-                onChange={e =>
-                  setContact({ ...contact, name: e.target.value })
-                }
+                onChange={e => setContact({ ...contact, name: e.target.value })}
+                className="text-xs h-8"
               />
               <NeoInput
                 placeholder="Subject"
                 value={contact.title}
-                onChange={e =>
-                  setContact({ ...contact, title: e.target.value })
-                }
+                onChange={e => setContact({ ...contact, title: e.target.value })}
+                className="text-xs h-8"
               />
             </div>
             <NeoTextArea
-              placeholder="Your message here..."
-              rows={3}
+              placeholder="Message..."
+              rows={2}
               value={contact.message}
-              onChange={e =>
-                setContact({ ...contact, message: e.target.value })
-              }
+              onChange={e => setContact({ ...contact, message: e.target.value })}
+              className="text-xs min-h-[60px]"
             />
             <NeoButton
               onClick={sendContact}
               disabled={loading}
               variant="dark"
-              className="w-full h-12 text-sm shadow-none active:translate-y-1"
+              className="w-full h-8 text-[10px]"
             >
-              {loading ? <Loader className="animate-spin" size={16} /> : 'SEND MESSAGE'}
+              {loading ? <Loader className="animate-spin" size={12} /> : 'SEND'}
             </NeoButton>
           </div>
         </NeoCard>
       </div>
 
-      <footer className="text-center pt-8 border-t-2 border-black/5 pb-4">
-        <p className="font-black text-xs md:text-sm text-gray-400">
+      <footer className="text-center pt-4 border-t-2 border-black/5">
+        <p className="font-black text-[10px] text-gray-400">
           CRAFTED BY AKA 🇮🇩 🇵🇸
         </p>
       </footer>
-
     </PageWrapper>
   );
 };
