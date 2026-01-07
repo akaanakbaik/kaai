@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/ytdl/:path*",
+      "destination": "https://api-ytdlpy.akadev.me/api/v1/ytdl/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
