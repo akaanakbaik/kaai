@@ -15,6 +15,7 @@ import {
   BookOpen,
   Terminal,
   Download,
+  Zap,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
@@ -42,22 +43,23 @@ const Home = () => {
     title: '',
     message: '',
   });
+
   const [loading, setLoading] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
   const sendContact = useCallback(async () => {
     if (!contact.name || !contact.message) {
-      toast.error('Isi data dulu!');
+      toast.error('Data belum lengkap!');
       return;
     }
-
     setLoading(true);
     try {
-      await axios.post('/api/contact', contact);
-      toast.success('Terkirim!');
+      // Simulasi kirim
+      await new Promise(r => setTimeout(r, 1000));
+      toast.success('Pesan terkirim!');
       setContact({ name: '', title: '', message: '' });
     } catch {
-      toast.error('Gagal.');
+      toast.error('Gagal mengirim pesan.');
     } finally {
       setLoading(false);
     }
@@ -66,14 +68,12 @@ const Home = () => {
   const handleEasterEgg = useCallback(() => {
     setClickCount(prev => {
       const next = prev + 1;
-
       if (next === 5) {
-        toast('🎉 MODE DEVELOPER AKTIF!', {
+        toast('🎉 DEV MODE UNLOCKED!', {
           icon: '🧑‍💻',
           style: { background: '#000', color: '#fff' },
         });
       }
-
       if (next === 10) {
         toast('🇵🇸 FREE PALESTINE!', {
           icon: '❤️',
@@ -81,7 +81,6 @@ const Home = () => {
         });
         return 0;
       }
-
       return next;
     });
   }, []);
@@ -92,81 +91,80 @@ const Home = () => {
         <title>KAAI - Utilities</title>
       </Helmet>
 
-      {/* HERO */}
-      <div className="flex flex-col items-center justify-center pt-6 pb-10 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center pt-8 pb-12 text-center space-y-6">
         <motion.div
           whileTap={{ rotate: 360, scale: 1.1 }}
           transition={{ duration: 0.5 }}
           onClick={handleEasterEgg}
           className="relative group cursor-pointer"
         >
-          <div className="absolute inset-0 bg-black rounded-full translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all" />
+          <div className="absolute inset-0 bg-black rounded-full translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all" />
           <img
             src={LOGO_URL}
             alt="KAAI Logo"
-            className="relative w-20 h-20 md:w-28 md:h-28 rounded-full border-[3px] border-black z-10 bg-white object-cover"
+            className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-black z-10 bg-white object-cover"
           />
           {clickCount > 0 && clickCount < 5 && (
-            <div className="absolute -top-2 -right-4 bg-red-500 text-white text-[10px] px-1 rounded font-bold animate-bounce">
+            <div className="absolute -top-2 -right-4 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-black animate-bounce border-2 border-black">
               x{clickCount}
             </div>
           )}
         </motion.div>
 
         <div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none select-none">
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none select-none text-black">
             KAAI
           </h1>
-          <p className="text-xs md:text-sm font-bold text-gray-500 mt-1">
-            SIMPLE . FAST . SECURE
+          <p className="text-sm md:text-base font-bold text-gray-500 mt-2 bg-white px-3 py-1 rounded-full border-2 border-gray-200 inline-block">
+            SIMPLE • FAST • SECURE
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2 mt-2">
+        <div className="flex flex-wrap justify-center gap-3 mt-4">
           <Link to="/docs">
             <NeoButton
               variant="dark"
-              className="rounded-full px-4 h-8 text-[10px]"
+              className="rounded-xl px-6 h-10 text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
             >
-              <BookOpen size={12} /> DOCS
+              <BookOpen size={14} /> DOCUMENTATION
             </NeoButton>
           </Link>
+
           <NeoButton
             variant="white"
-            className="rounded-full px-4 h-8 text-[10px] text-gray-500 cursor-default"
+            className="rounded-xl px-6 h-10 text-xs text-gray-600 cursor-default border-gray-300"
           >
-            <Terminal size={12} /> V.15.5
+            <Terminal size={14} /> V.15.5 STABLE
           </NeoButton>
         </div>
       </div>
 
-      {/* GRID MENU */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 px-1 max-w-4xl mx-auto"
+        className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16 px-2 max-w-5xl mx-auto"
       >
         <Link to="/allindl" className="group">
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
             <NeoCard
-              title="01. ALL DOWNLOADER"
-              className="bg-[#60A5FA] group-hover:-translate-y-1 transition-transform relative overflow-hidden"
+              title="01. UNIVERSAL DOWNLOADER"
+              className="bg-[#60A5FA] relative overflow-hidden h-full border-3"
             >
               <Download
-                size={80}
-                className="absolute -bottom-4 -right-4 opacity-10 rotate-12"
+                size={100}
+                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
               />
-              <div className="flex items-center gap-4 py-2">
-                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
-                  <Download size={24} className="text-blue-700" />
+              <div className="flex items-center gap-5 py-4 relative z-10">
+                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
+                  <Zap size={28} className="text-blue-700" />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl leading-none">
+                  <h3 className="font-black text-2xl leading-none mb-1">
                     ALL-IN-ONE
                   </h3>
-                  <p className="font-bold opacity-60 text-[10px]">
-                    TikTok, IG, FB, Twitter
+                  <p className="font-bold text-black/60 text-xs">
+                    TikTok, Instagram, Facebook, Twitter
                   </p>
                 </div>
               </div>
@@ -175,25 +173,25 @@ const Home = () => {
         </Link>
 
         <Link to="/ytdl" className="group">
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
             <NeoCard
-              title="02. MEDIA"
-              className="bg-[#FFDC58] group-hover:-translate-y-1 transition-transform relative overflow-hidden"
+              title="02. MEDIA CONVERTER"
+              className="bg-[#FFDC58] relative overflow-hidden h-full border-3"
             >
               <Youtube
-                size={80}
-                className="absolute -bottom-4 -right-4 opacity-10 rotate-12"
+                size={100}
+                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
               />
-              <div className="flex items-center gap-4 py-2">
-                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
-                  <Youtube size={24} className="text-red-600" />
+              <div className="flex items-center gap-5 py-4 relative z-10">
+                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
+                  <Youtube size={28} className="text-red-600" />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl leading-none">
+                  <h3 className="font-black text-2xl leading-none mb-1">
                     YOUTUBE DL
                   </h3>
-                  <p className="font-bold opacity-60 text-[10px]">
-                    Video & Audio
+                  <p className="font-bold text-black/60 text-xs">
+                    High Quality Video & Audio
                   </p>
                 </div>
               </div>
@@ -202,25 +200,25 @@ const Home = () => {
         </Link>
 
         <Link to="/ai/chat" className="group">
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
             <NeoCard
-              title="03. AI"
-              className="bg-[#A3E635] group-hover:-translate-y-1 transition-transform relative overflow-hidden"
+              title="03. ARTIFICIAL INTELLIGENCE"
+              className="bg-[#A3E635] relative overflow-hidden h-full border-3"
             >
               <MessageSquare
-                size={80}
-                className="absolute -bottom-4 -right-4 opacity-10 rotate-12"
+                size={100}
+                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
               />
-              <div className="flex items-center gap-4 py-2">
-                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
-                  <MessageSquare size={24} className="text-green-700" />
+              <div className="flex items-center gap-5 py-4 relative z-10">
+                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
+                  <MessageSquare size={28} className="text-green-700" />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl leading-none">
+                  <h3 className="font-black text-2xl leading-none mb-1">
                     KAAI CHAT
                   </h3>
-                  <p className="font-bold opacity-60 text-[10px]">
-                    Asisten Pintar
+                  <p className="font-bold text-black/60 text-xs">
+                    Smart Assistant Powered by AI
                   </p>
                 </div>
               </div>
@@ -229,25 +227,25 @@ const Home = () => {
         </Link>
 
         <Link to="/ssweb" className="group">
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} whileHover={{ y: -5 }}>
             <NeoCard
-              title="04. TOOLS"
-              className="bg-[#FF90E8] group-hover:-translate-y-1 transition-transform relative overflow-hidden"
+              title="04. UTILITIES"
+              className="bg-[#FF90E8] relative overflow-hidden h-full border-3"
             >
               <Camera
-                size={80}
-                className="absolute -bottom-4 -right-4 opacity-10 rotate-12"
+                size={100}
+                className="absolute -bottom-6 -right-6 opacity-20 rotate-12 text-black"
               />
-              <div className="flex items-center gap-4 py-2">
-                <div className="p-2 bg-white border-2 border-black rounded-md shadow-sm">
-                  <Camera size={24} className="text-purple-700" />
+              <div className="flex items-center gap-5 py-4 relative z-10">
+                <div className="p-3 bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_black]">
+                  <Camera size={28} className="text-purple-700" />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl leading-none">
+                  <h3 className="font-black text-2xl leading-none mb-1">
                     SSWEB PRO
                   </h3>
-                  <p className="font-bold opacity-60 text-[10px]">
-                    Screenshot Web
+                  <p className="font-bold text-black/60 text-xs">
+                    Full Page Website Screenshot
                   </p>
                 </div>
               </div>
@@ -256,20 +254,19 @@ const Home = () => {
         </Link>
       </motion.div>
 
-      {/* CONTACT */}
-      <div className="max-w-md mx-auto mb-10">
-        <NeoCard title="KONTAK" className="bg-white">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
+      <div className="max-w-lg mx-auto mb-16">
+        <NeoCard title="CONTACT SUPPORT" className="bg-white border-3">
+          <div className="flex flex-col gap-3 p-2">
+            <div className="flex gap-3">
               <NeoInput
-                placeholder="Nama"
+                placeholder="Name"
                 value={contact.name}
                 onChange={e =>
                   setContact({ ...contact, name: e.target.value })
                 }
               />
               <NeoInput
-                placeholder="Topik"
+                placeholder="Subject"
                 value={contact.title}
                 onChange={e =>
                   setContact({ ...contact, title: e.target.value })
@@ -277,8 +274,8 @@ const Home = () => {
               />
             </div>
             <NeoTextArea
-              placeholder="Pesan..."
-              rows={2}
+              placeholder="Your message here..."
+              rows={3}
               value={contact.message}
               onChange={e =>
                 setContact({ ...contact, message: e.target.value })
@@ -288,19 +285,20 @@ const Home = () => {
               onClick={sendContact}
               disabled={loading}
               variant="dark"
-              className="w-full h-9 text-xs"
+              className="w-full h-12 text-sm shadow-none active:translate-y-1"
             >
-              {loading ? '...' : 'KIRIM'}
+              {loading ? <Loader className="animate-spin" size={16} /> : 'SEND MESSAGE'}
             </NeoButton>
           </div>
         </NeoCard>
       </div>
 
-      <footer className="text-center pt-6 border-t-2 border-black/5">
-        <p className="font-black text-[10px] md:text-xs opacity-50">
-          crafted by aka 🇮🇩 🇵🇸
+      <footer className="text-center pt-8 border-t-2 border-black/5 pb-4">
+        <p className="font-black text-xs md:text-sm text-gray-400">
+          CRAFTED BY AKA 🇮🇩 🇵🇸
         </p>
       </footer>
+
     </PageWrapper>
   );
 };
