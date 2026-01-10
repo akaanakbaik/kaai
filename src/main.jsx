@@ -8,16 +8,18 @@ import { HelmetProvider } from 'react-helmet-async';
 
 inject();
 
-// API UTAMA WEBSITE (Tetap Direct ke Server KAAI API)
+/**
+ * API GENERAL (SSWEB, AI, ALLINDL, CONTACT)
+ * Menggunakan Proxy Vercel ("/") yang diarahkan ke kaai-api.akadev.me
+ */
 window.apiMain = axios.create({
-  baseURL: "https://kaai-api.akadev.me",
+  baseURL: "/", 
   headers: { "Content-Type": "application/json" }
 });
 
 /**
- * 🔗 KONEKSI KE BACKEND YTDL (SECURE PROXY)
- * Khusus untuk YTDL (Python), kita lewatkan proxy Vercel ("/") 
- * agar URL asli Cloudflare Tunnel (api-ytdlpy...) TIDAK BOCOR ke user.
+ * API YTDL (PYTHON)
+ * Menggunakan Proxy Vercel ("/") yang diarahkan ke api-ytdlpy.akadev.me
  */
 window.apiYtdl = axios.create({
   baseURL: "/", 
