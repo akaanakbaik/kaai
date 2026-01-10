@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI';
 import { Camera, Download, Loader, Monitor, Smartphone, ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -15,20 +14,35 @@ const SSWeb = () => {
 
     const handleSS = async () => {
         if(!url) return toast.error("Masukkan URL dulu!");
+
         // Auto add https if missing
         let targetUrl = url;
         if (!targetUrl.startsWith('http')) targetUrl = `https://${targetUrl}`;
 
         setLoading(true); setResult(null);
+
         try {
-            const res = await axios.get(`/api/ssweb?url=${encodeURIComponent(targetUrl)}&type=${type}`);
+            // PERBAIKAN: Gunakan window.apiMain yang sudah dikonfigurasi di main.jsx
+            // Ini memastikan request melewati proxy yang benar sesuai vercel.json
+            const res = await window.apiMain.get('/api/ssweb', {
+                params: {
+                    url: targetUrl,
+                    type: type
+                },
+                // Tambahan: Timeout khusus untuk SSWeb karena proses puppeteer berat
+                timeout: 60000 
+            });
+
             if(res.data.status) {
                 // Tambahkan timestamp agar browser tidak cache gambar lama
                 setResult(`${res.data.url}?t=${Date.now()}`); 
                 toast.success("Cekrek! Berhasil.");
             } else throw new Error(res.data.msg);
+
         } catch (e) { 
-            toast.error("Gagal: " + (e.response?.data?.msg || "Server Timeout / Error")); 
+            // Logging error untuk debug
+            console.error("SSWeb Error:", e);
+            toast.error("Gagal: " + (e.response?.data?.msg || e.message || "Server Timeout / Error")); 
         } finally { setLoading(false); }
     };
 
@@ -79,20 +93,21 @@ const SSWeb = () => {
                                 <div className="border-2 border-black bg-gray-100 rounded mb-3 relative min-h-[200px] flex items-center justify-center overflow-hidden">
                                     <img 
                                         src={result} 
-                                        className="w-full h-auto object-contain block" 
+                                        className="w-full h-auto object-contain block relative z-10" 
                                         alt="Hasil Screenshot"
                                         onLoad={() => toast.success("Gambar dimuat!")}
                                         onError={(e) => {
                                             e.target.style.display = 'none';
-                                            toast.error("Gagal load gambar");
+                                            toast.error("Gagal load gambar dari server");
                                         }}
                                     />
                                     {/* Fallback text behind image */}
-                                    <div className="absolute inset-0 -z-10 flex flex-col items-center justify-center text-gray-400">
+                                    <div className="absolute inset-0 z-0 flex flex-col items-center justify-center text-gray-400">
                                         <Loader className="animate-spin mb-2"/>
                                         <span className="text-xs font-bold">Memuat Preview...</span>
                                     </div>
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-2">
                                     <a href={result} target="_blank" rel="noreferrer" className="w-full">
                                         <NeoButton variant="white" className="w-full h-9 text-xs"><ExternalLink size={14}/> BUKA</NeoButton>
