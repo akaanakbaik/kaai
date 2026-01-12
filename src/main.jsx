@@ -8,19 +8,15 @@ import { HelmetProvider } from 'react-helmet-async';
 
 inject();
 
-/**
- * API GENERAL (SSWEB, AI, ALLINDL, CONTACT)
- * Menggunakan Proxy Vercel ("/") yang diarahkan ke kaai-api.akadev.me
- */
+// API GENERAL (SSWEB, AI, ALLINDL, CONTACT)
+// Menggunakan Proxy Vercel ("/") yang diarahkan ke kaai-api.akadev.me
 window.apiMain = axios.create({
   baseURL: "/", 
   headers: { "Content-Type": "application/json" }
 });
 
-/**
- * API YTDL (PYTHON)
- * Menggunakan Proxy Vercel ("/") yang diarahkan ke api-ytdlpy.akadev.me
- */
+// API YTDL (PYTHON)
+// Menggunakan Proxy Vercel ("/") yang diarahkan ke api-ytdlpy.akadev.me
 window.apiYtdl = axios.create({
   baseURL: "/", 
   headers: { 
