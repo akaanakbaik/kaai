@@ -3,14 +3,14 @@ import { NeoCard, NeoButton, NeoInput, PageWrapper } from '../components/NeoUI'
 import { 
   Video, Music, ArrowLeft, Loader, Clipboard, 
   Terminal, Zap, CheckCircle, Clock, Cpu, 
-  Download, ChevronDown, Activity, Play, Pause
+  Download, ChevronDown, Activity, Play, Pause, AlertTriangle
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Helmet } from 'react-helmet-async'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// --- CUSTOM AUDIO PLAYER ---
+// --- CUSTOM AUDIO PLAYER (Agar bisa geser durasi) ---
 const CustomAudioPlayer = ({ src, thumbnail }) => {
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -110,6 +110,7 @@ const Ytdl = () => {
 
   useEffect(() => {
     const connectWs = () => {
+      // Pastikan URL WebSocket juga menggunakan HTTPS/WSS
       wsRef.current = new WebSocket('wss://api-ytdlpy.akadev.me/ws/progress')
       wsRef.current.onopen = () => console.log('✅ WS Connected')
       wsRef.current.onmessage = (event) => {
@@ -151,14 +152,15 @@ const Ytdl = () => {
     setLogs(['> Initializing System...'])
 
     try {
-      const backendType = type === 'mp3' ? 'audio' : 'video'
+      // --- PERBAIKAN UTAMA: GUNAKAN ENDPOINT /api/ytdl/mp3 ATAU mp4 ---
+      const endpoint = type === 'mp3' ? '/api/ytdl/mp3' : '/api/ytdl/mp4'
       
-      // --- PERBAIKAN DI SINI: MENGGUNAKAN ENDPOINT V1 BARU ---
-      // Endpoint lama: /api/ytdl/info -> Endpoint baru: /api/v1/ytdl/process
-      const res = await window.apiYtdl.post('/api/v1/ytdl/process', 
-        { url, type: backendType }, 
-        { timeout: 600000 }
-      )
+      // Menggunakan method GET sesuai standar API baru (atau POST jika perlu)
+      // window.apiMain digunakan karena sudah diset baseURL nya ke "/"
+      const res = await window.apiMain.get(endpoint, {
+        params: { url: url }, // Kirim URL sebagai query param
+        timeout: 600000 
+      })
 
       if (!res.data?.status) throw new Error(res.data?.msg || 'Failed')
       
@@ -170,7 +172,7 @@ const Ytdl = () => {
       setStage('error')
       const errMsg = err.response?.data?.msg || err.message || 'Server Busy'
       setLogs(prev => [...prev, `> Error: ${errMsg}`])
-      toast.error(errMsg)
+      toast.error(typeof errMsg === 'object' ? 'Limit Exceeded' : errMsg)
     } finally {
       setLoading(false)
     }
