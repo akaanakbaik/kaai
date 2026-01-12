@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { NeoButton, PageWrapper } from '../components/NeoUI';
 import { 
   ArrowLeft, Terminal, Copy, Check, Code, Zap, ChevronDown, 
-  Youtube, Globe, MessageSquare, Layers
+  Youtube, Globe, MessageSquare, Layers, Box
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import toast from 'react-hot-toast';
+
+// --- COMPONENTS ---
 
 const CodeBlock = ({ label, code }) => {
   const [copied, setCopied] = useState(false);
@@ -89,11 +91,14 @@ const ServiceCard = ({ icon: Icon, title, desc, color, isOpen, onClick, children
 
 const Docs = () => {
   const [activeTab, setActiveTab] = useState('ytdl');
+  const [aiModel, setAiModel] = useState('copilot'); // State untuk Model AI
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   const y = useTransform(scrollYProgress, [0, 1], [0, -20]);
 
   const toggleTab = (id) => setActiveTab(activeTab === id ? null : id);
+
+  const AI_MODELS = ['copilot', 'meta', 'qwen', 'turboseek', 'webpilot', 'cici', 'copilot_memory'];
 
   return (
     <PageWrapper>
@@ -101,6 +106,7 @@ const Docs = () => {
       
       <div ref={containerRef} className="w-full max-w-2xl mx-auto px-2 pb-10 pt-4 relative">
         
+        {/* HEADER */}
         <motion.div style={{ y }} className="mb-6 relative z-0">
           <div className="flex justify-start mb-3">
             <Link to="/">
@@ -121,8 +127,10 @@ const Docs = () => {
           </div>
         </motion.div>
 
+        {/* CONTENT */}
         <div className="relative z-10 space-y-3">
           
+          {/* 1. YTDL */}
           <ServiceCard 
             icon={Youtube} 
             title="YOUTUBE DL" 
@@ -166,13 +174,12 @@ const Docs = () => {
               </div>
               <CodeBlock label="SCRAPER.JS" code={`const axios = require('axios');
 
-// Function Utama
 async function kaaiDownload(url, type = 'mp3') {
   try {
     const endpoint = type === 'mp3' ? 'mp3' : 'mp4';
     const { data } = await axios.get(\`https://kaai.vercel.app/api/ytdl/\${endpoint}\`, {
       params: { url },
-      timeout: 300000 // Wajib 5 Menit
+      timeout: 300000 // 5 Mins
     });
     return data;
   } catch (e) {
@@ -180,31 +187,80 @@ async function kaaiDownload(url, type = 'mp3') {
   }
 }
 
-// --- CONTOH MP3 ---
-kaaiDownload('https://youtu.be/...', 'mp3').then(res => {
-  console.log('🎵 Audio:', res.metadata.download_url);
-});
-
-// --- CONTOH MP4 ---
-kaaiDownload('https://youtu.be/...', 'mp4').then(res => {
-  console.log('🎬 Video:', res.metadata.download_url);
-});`} />
+// Usage Example
+kaaiDownload('https://youtu.be/...', 'mp3').then(console.log);`} />
             </div>
           </ServiceCard>
 
+          {/* 2. KAAI CHAT (AI) */}
           <ServiceCard 
-            icon={Layers} 
-            title="ALL-IN-ONE" 
-            desc="Social Media" 
-            color="bg-[#60A5FA]"
-            isOpen={activeTab === 'aio'}
-            onClick={() => toggleTab('aio')}
+            icon={MessageSquare} 
+            title="KAAI CHAT" 
+            desc="Multi-Model AI Assistant" 
+            color="bg-[#A3E635]"
+            isOpen={activeTab === 'ai'}
+            onClick={() => toggleTab('ai')}
           >
-            <div className="text-center py-4 opacity-50 font-bold text-[9px] bg-gray-50 rounded border border-gray-200">
-              Coming Soon...
+            {/* MODEL SELECTOR */}
+            <div className="mb-4">
+              <span className="text-[9px] font-black uppercase text-gray-500 mb-1 block">Pilih Model:</span>
+              <div className="flex flex-wrap gap-2">
+                {AI_MODELS.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setAiModel(m)}
+                    className={`text-[9px] font-bold px-2 py-1 rounded border border-black transition-all ${aiModel === m ? 'bg-black text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Terminal size={12} className="text-blue-600" />
+                <span className="font-black text-[9px] uppercase">cURL Command</span>
+              </div>
+              <CodeBlock label={`GET ${aiModel.toUpperCase()}`} code={`curl -X GET "https://kaai.vercel.app/api/ai?query=Halo&model=${aiModel}"`} />
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-dashed border-gray-300">
+              <div className="flex items-center gap-2 mb-1">
+                <Zap size={12} className="text-yellow-600" />
+                <span className="font-black text-[9px] uppercase">JSON Response</span>
+              </div>
+              <CodeBlock label="OUTPUT" code={`{
+  "author": "aka",
+  "status": true,
+  "data": "Halo! Saya adalah AI Assistant..."
+}`} />
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-dashed border-gray-300">
+              <div className="flex items-center gap-2 mb-1">
+                <Code size={12} className="text-purple-600" />
+                <span className="font-black text-[9px] uppercase">Node.js Scraper</span>
+              </div>
+              <CodeBlock label="CHAT.JS" code={`const axios = require('axios');
+
+async function kaaiChat(query, model = 'copilot') {
+  try {
+    const { data } = await axios.get('https://kaai.vercel.app/api/ai', {
+      params: { query, model }
+    });
+    return data;
+  } catch (e) {
+    return { status: false, msg: e.message };
+  }
+}
+
+// Usage Example
+kaaiChat('Siapa kamu?', '${aiModel}').then(console.log);`} />
             </div>
           </ServiceCard>
 
+          {/* 3. SSWEB (Coming Soon) */}
           <ServiceCard 
             icon={Globe} 
             title="SSWEB PRO" 
@@ -214,25 +270,25 @@ kaaiDownload('https://youtu.be/...', 'mp4').then(res => {
             onClick={() => toggleTab('ssweb')}
           >
             <div className="text-center py-4 opacity-50 font-bold text-[9px] bg-gray-50 rounded border border-gray-200">
-              Coming Soon...
+              Documentation In Progress...
             </div>
           </ServiceCard>
 
+          {/* 4. ALL IN ONE (Coming Soon) */}
           <ServiceCard 
-            icon={MessageSquare} 
-            title="KAAI AI" 
-            desc="Smart Bot" 
-            color="bg-[#A3E635]"
-            isOpen={activeTab === 'ai'}
-            onClick={() => toggleTab('ai')}
+            icon={Layers} 
+            title="ALL-IN-ONE" 
+            desc="Social Media Downloader" 
+            color="bg-[#60A5FA]"
+            isOpen={activeTab === 'aio'}
+            onClick={() => toggleTab('aio')}
           >
             <div className="text-center py-4 opacity-50 font-bold text-[9px] bg-gray-50 rounded border border-gray-200">
-              Coming Soon...
+              Documentation In Progress...
             </div>
           </ServiceCard>
 
         </div>
-
       </div>
       
       <style jsx>{`
